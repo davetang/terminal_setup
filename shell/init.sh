@@ -20,6 +20,18 @@ if [ -n "$_ts_sh" ]; then
 fi
 unset _ts_sh
 
+# --- bat: pin a theme so it never probes the terminal ---
+# bat's default (--theme=auto) asks the terminal for its foreground/background
+# colours (OSC 10/11 + DA1) to choose a light or dark theme. The terminal answers
+# by writing the reply into *stdin*. Under tmux that reply is proxied, so it can
+# land after bat has exited — and whoever owns the terminal next reads it as
+# typed keys: zsh's vi-mode takes the leading ESC as "normal mode" and the
+# "rgb:..." payload as commands, less takes the 'g' as "go to first line".
+# Pinning any concrete theme skips the probe. Any name from 'bat --list-themes'
+# works; 'ansi' is the fallback if you want bat to follow your terminal palette
+# instead of these fixed colours.
+[ -z "${BAT_THEME:-}" ] && export BAT_THEME="Monokai Extended"
+
 # --- ollama (client only) ---
 # The installed ollama can query a server but not run one. Uncomment and point
 # it at yours; the default is http://127.0.0.1:11434.
