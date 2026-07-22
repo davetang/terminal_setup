@@ -225,7 +225,22 @@ then add `name` to `BINTOOLS` in the `Makefile` (and `run.sh`).
 exists) that sources `shell/init.sh`. That file:
 
 - puts `~/bin`, `~/.local/bin`, and `~/miniforge3/bin` on `PATH`;
-- initialises `starship`, `zoxide`, `atuin`, `direnv`, and `fzf` for bash/zsh.
+- initialises `starship`, `zoxide`, `atuin`, `direnv`, and `fzf` for bash/zsh;
+- pins `BAT_THEME` so `bat` doesn't probe the terminal for its colours.
+
+**starship and oh-my-zsh themes are mutually exclusive.** starship assigns
+`PROMPT`/`RPROMPT` itself, and this block is sourced last, so it would always
+win. It is therefore skipped whenever `ZSH_THEME` is set — your theme stays,
+and bash (where oh-my-zsh doesn't apply) still gets starship. Override with
+`TS_STARSHIP=1` to always use starship, or `TS_STARSHIP=0` to never use it;
+set it above the `terminal-setup` block in your rc.
+
+`BAT_THEME` is pinned to `Monokai Extended` because `bat`'s default
+(`--theme=auto`) asks the terminal for its background colour, and the reply is
+delivered as *input* — under screen/tmux it can arrive after `bat` exits, where
+a vi-mode line editor reads the leading `ESC` as a mode switch and the rest as
+typed keys. Any name from `bat --list-themes` avoids the probe; export your own
+`BAT_THEME` and this file leaves it alone.
 
 Optional aliases (`cat`→`bat`, `ls`→`eza`, …) are included but **commented out**
 in `shell/init.sh` — uncomment the ones you want. Because `zsh` is installed

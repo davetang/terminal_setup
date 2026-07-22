@@ -12,13 +12,22 @@ elif [ -n "${BASH_VERSION:-}" ]; then _ts_sh=bash
 else _ts_sh=; fi
 
 if [ -n "$_ts_sh" ]; then
-  command -v starship >/dev/null 2>&1 && eval "$(starship init $_ts_sh)"
+  # starship assigns PROMPT/RPROMPT itself, so it and an oh-my-zsh theme cannot
+  # coexist: this file is sourced last, so starship would always win and the
+  # theme you picked would never appear. Skip it when a theme is selected.
+  # bash is unaffected — no oh-my-zsh there — so it still gets starship.
+  # Override either way with TS_STARSHIP=1 (always) or TS_STARSHIP=0 (never).
+  _ts_starship="${TS_STARSHIP:-}"
+  if [ -z "$_ts_starship" ]; then
+    if [ -n "${ZSH_THEME:-}" ]; then _ts_starship=0; else _ts_starship=1; fi
+  fi
+  [ "$_ts_starship" = 1 ] && command -v starship >/dev/null 2>&1 && eval "$(starship init $_ts_sh)"
   command -v zoxide   >/dev/null 2>&1 && eval "$(zoxide init $_ts_sh)"
   command -v atuin    >/dev/null 2>&1 && eval "$(atuin init $_ts_sh)"
   command -v direnv   >/dev/null 2>&1 && eval "$(direnv hook $_ts_sh)"
   command -v fzf      >/dev/null 2>&1 && eval "$(fzf --$_ts_sh 2>/dev/null)"
 fi
-unset _ts_sh
+unset _ts_sh _ts_starship
 
 # --- bat: pin a theme so it never probes the terminal ---
 # bat's default (--theme=auto) asks the terminal for its foreground/background
