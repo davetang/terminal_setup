@@ -20,6 +20,11 @@ if [ -n "$_ts_sh" ]; then
 fi
 unset _ts_sh
 
+# --- ollama (client only) ---
+# The installed ollama can query a server but not run one. Uncomment and point
+# it at yours; the default is http://127.0.0.1:11434.
+# export OLLAMA_HOST=http://gpu-box:11434
+
 # --- optional aliases (uncomment the ones you want) ---
 # command -v bat  >/dev/null 2>&1 && alias cat='bat --paging=never'
 # command -v eza  >/dev/null 2>&1 && { alias ls='eza --group-directories-first'; alias ll='eza -lag --git'; alias tree='eza --tree'; }

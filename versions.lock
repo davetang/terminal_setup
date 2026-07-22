@@ -39,3 +39,4 @@ pandoc	gh	3.10
 viddy	gh	v1.3.1
 parallel	conda	20260622
 pv	conda	1.6.6
+ollama	gh	v0.32.1

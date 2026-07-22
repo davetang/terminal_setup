@@ -98,6 +98,7 @@ every tool is a prebuilt binary or a conda/pip package.
 | **gh** | GitHub CLI | binary |
 | **pandoc** | universal document converter | binary |
 | **viddy** | a modern `watch` | binary |
+| **ollama** | CLI for an Ollama server (**client only**) | binary |
 | **tmux** | terminal multiplexer | conda-forge |
 | **zsh** | the shell | conda-forge |
 | **datamash** | group-by statistics | conda-forge |
@@ -107,10 +108,48 @@ every tool is a prebuilt binary or a conda/pip package.
 
 Binaries download straight from GitHub releases into `~/bin`, pinned to the
 versions in `versions.lock` (see [Reproducibility](#reproducibility-version-pinning)).
+`ollama` is the odd one out — see [ollama, client only](#ollama-client-only).
 `tmux`, `zsh`, `datamash`, `parallel`, and `pv` have no clean static binary
 upstream, so they come from conda-forge — if no `conda` is found, `make install`
 bootstraps Miniforge under `~/miniforge3` automatically. `visidata` is pure
 Python (`pipx` → `pip --user` → conda fallback).
+
+## ollama, client only
+
+Yes — you can install just the `ollama` command and skip the model-serving half
+entirely. Every subcommand except `ollama serve` is an HTTP client for the API
+at `$OLLAMA_HOST`, so the CLI binary on its own is enough to talk to a server
+someone else is running:
+
+```sh
+export OLLAMA_HOST=http://gpu-box:11434   # default is http://127.0.0.1:11434
+ollama list
+ollama run qwen3 'summarise this in one line' < notes.txt
+```
+
+Upstream doesn't publish a client-only asset — the Linux release is a single
+**1.4 GB** `.tar.zst` holding `bin/ollama` (the 39 MB CLI) plus `lib/ollama/*`,
+the CUDA/ROCm/CPU inference runners that only `ollama serve` ever loads. But
+`bin/ollama` is the *first* member of the tarball, so `scripts/ollama.sh`
+streams the release, extracts that one file, and lets the rest of the download
+die on a broken pipe: **~12 MB over the wire, ~39 MB on disk**, no runners, no
+GPU libraries, no service, nothing listening.
+
+```sh
+make ollama            # or: ./run.sh ollama
+FORCE=1 make ollama    # upgrade the client in place
+```
+
+What you give up: `ollama serve` will start (it's the same binary) but has no
+runners to load models with, so hosting models locally needs the full upstream
+install from [ollama.com](https://ollama.com/download). Everything else —
+`run`, `list`, `ps`, `pull`, `push`, `show`, `cp`, `rm`, `create` — is a plain
+API call and works against any reachable server.
+
+The release is zstd-compressed, which `tar` and Python ≤ 3.13 can't read, so the
+script finds a decompressor in this order: the `zstd`/`unzstd` CLI → `python3`
+(3.14's `compression.zstd`, or the `zstandard`/`pyzstd` modules) → `zstd` from
+conda-forge. `make deps` reports which one you have.
 
 ## How it works
 
@@ -125,6 +164,7 @@ scripts/freeze.sh              resolve current versions → versions.lock
 scripts/miniforge.sh           bootstrap Miniforge (no-root)
 scripts/{tmux,zsh,datamash,parallel,pv}.sh   conda-forge installs
 scripts/visidata.sh            pipx / pip / conda install
+scripts/ollama.sh              stream the ollama CLI out of upstream's bundle
 scripts/setup_shell.sh         wire the shell rc
 scripts/status.sh              back the check target
 scripts/uninstall.sh           remove installed ~/bin binaries
@@ -187,7 +227,7 @@ later, re-run `make setup` after it exists to wire your `~/.zshrc`.
 ## After installing
 
 `make setup` handles `PATH` and auto-initialises starship/zoxide/atuin/direnv/fzf.
-Two tools need one manual step:
+Three tools need one manual step:
 
 - **delta** does nothing until git is told to use it — add to `~/.gitconfig`:
 
@@ -203,6 +243,9 @@ Two tools need one manual step:
 - **zsh** (optional) — make it your login shell with
   `chsh -s "$(command -v zsh)"` (the shell must be listed in `/etc/shells`;
   otherwise just run `exec zsh`, or add the path to `/etc/shells` first).
+
+- **ollama** needs a server to talk to — uncomment and edit the `OLLAMA_HOST`
+  line in `shell/init.sh` (it defaults to `http://127.0.0.1:11434`).
 
 Everything else works the moment it's on `PATH`. Run `make check` to confirm.
 

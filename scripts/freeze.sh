@@ -29,6 +29,15 @@ while IFS=$'\t' read -r name repo re bins; do
   fi
 done < "$ROOTDIR/binaries.tsv"
 
+# ollama is not in binaries.tsv (scripts/ollama.sh installs it client-only out
+# of a zstd bundle), so resolve its tag here.
+tag="$(gh_latest_tag ollama/ollama)"
+if [[ -n "$tag" ]]; then
+  printf 'ollama\tgh\t%s\n' "$tag" >> "$tmp"; ok "ollama -> $tag"
+else
+  warn "ollama: could not resolve tag (left unpinned → latest)"
+fi
+
 log "resolving conda-forge versions…"
 for p in tmux zsh datamash parallel pv; do
   v="$(curl -fsSL "https://api.anaconda.org/package/conda-forge/$p" \

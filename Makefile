@@ -15,7 +15,7 @@ BINTOOLS := bat eza fd rg sd dust duf procs btop delta hyperfine \
 CONDATOOLS := tmux zsh datamash parallel pv
 
 .PHONY: help deps check install setup uninstall miniforge freeze \
-        binaries conda-tools pip-tools visidata \
+        binaries conda-tools pip-tools visidata ollama \
         $(BINTOOLS) $(CONDATOOLS)
 
 help: ## Show this help
@@ -36,7 +36,7 @@ check: ## Report install status of every tool
 freeze: ## Pin every tool to its current version -> versions.lock
 	@$(ROOT)scripts/freeze.sh
 
-install: deps binaries conda-tools pip-tools ## Install the whole curated set
+install: deps binaries conda-tools pip-tools ollama ## Install the whole curated set
 	@echo
 	@echo "Done. Next: 'make setup' to wire your shell, then restart it."
 
@@ -54,6 +54,9 @@ pip-tools: visidata ## Install pip/pipx tools (visidata)
 
 visidata:
 	@$(ROOT)scripts/visidata.sh
+
+ollama: ## Install the ollama CLI, client only (queries a server, can't serve)
+	@$(ROOT)scripts/ollama.sh
 
 miniforge: ## Bootstrap Miniforge under ~/miniforge3 if no conda is present
 	@$(ROOT)scripts/miniforge.sh

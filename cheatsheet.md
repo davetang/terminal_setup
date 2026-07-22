@@ -73,6 +73,22 @@ viddy -n 2 kubectl get pods         # a modern `watch`: re-run every 2s
 viddy -d 'date; free -h'            # -d highlights what changed between runs
 ```
 
+## LLM queries (ollama, client only)
+
+```sh
+export OLLAMA_HOST=http://gpu-box:11434   # default http://127.0.0.1:11434
+ollama list                         # models available on that server
+ollama ps                           # what's loaded in memory right now
+ollama run qwen3 'one-line summary'         # one-shot prompt, prints and exits
+ollama run qwen3 < prompt.txt               # prompt from a file
+cat notes.md | ollama run qwen3 'summarise' # or from a pipe
+ollama run qwen3                    # interactive chat; /bye quits
+ollama show qwen3                   # model params, context length, licence
+ollama pull qwen3                   # tell the server to fetch a model
+ollama --version                    # client version (warns if no server)
+# no `ollama serve` — this install has the CLI, not the inference runners
+```
+
 ## Navigation & finding
 
 ```sh

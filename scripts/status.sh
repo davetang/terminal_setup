@@ -10,7 +10,7 @@ tools=(bat eza fd rg sd dust duf procs btop delta hyperfine
        fzf zoxide atuin yazi ya broot
        starship direnv
        just chezmoi xh tldr
-       gh pandoc viddy
+       gh pandoc viddy ollama
        tmux zsh datamash parallel pv vd)
 
 printf '%-12s %-8s %s\n' TOOL STATUS LOCATION

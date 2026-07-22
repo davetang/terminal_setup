@@ -26,7 +26,7 @@ case "$t" in
     echo "usage: ./run.sh <target>"
     echo "  deps check freeze install setup uninstall"
     echo "  binaries conda-tools pip-tools miniforge"
-    echo "  <tool>   any of: ${BINTOOLS[*]} ${CONDATOOLS[*]} visidata" ;;
+    echo "  <tool>   any of: ${BINTOOLS[*]} ${CONDATOOLS[*]} visidata ollama" ;;
   deps)        "$here/deps.sh" ;;
   check)       "$here/scripts/status.sh" ;;
   freeze)      "$here/scripts/freeze.sh" ;;
@@ -36,8 +36,10 @@ case "$t" in
   binaries)    do_binaries ;;
   conda-tools) do_conda ;;
   pip-tools|visidata) "$here/scripts/visidata.sh" ;;
+  ollama)      "$here/scripts/ollama.sh" ;;
   install)
     "$here/deps.sh"; do_binaries; do_conda; "$here/scripts/visidata.sh"
+    "$here/scripts/ollama.sh"
     echo; ok "Done. Next: ./run.sh setup, then restart your shell." ;;
   *)
     if printf '%s\n' "${BINTOOLS[@]}"  | grep -qx "$t"; then "$here/scripts/binary.sh" "$t"
