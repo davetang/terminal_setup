@@ -1,0 +1,230 @@
+# terminal setup
+
+A self-contained, **no-root** setup for a modern terminal. Everything installs
+under `$HOME` (`~/bin` for release binaries, `~/miniforge3` for the conda tools,
+`~/.local/bin` for visidata) and nothing outside this directory is needed. Built
+the same way as
+[`nvim_setup`](https://github.com/davetang/nvim_setup): a `Makefile` that
+delegates to small, idempotent shell scripts.
+
+## Quick start
+
+```sh
+make deps       # read-only preflight: check prerequisites
+make install    # install everything under ~/bin (+ Miniforge for a few tools)
+make setup      # wire ~/bin and tool init into your shell rc
+exec $SHELL -l  # restart your shell
+```
+
+No `make`? Use the identical make-free entry point:
+
+```sh
+./run.sh deps
+./run.sh install
+./run.sh setup
+```
+
+Install or reinstall a single tool:
+
+```sh
+make bat              # or: ./run.sh bat
+FORCE=1 make bat      # overwrite an existing copy
+make check            # report what is / isn't installed
+```
+
+Usage examples for every tool live in [`cheatsheet.md`](cheatsheet.md).
+
+## Commands
+
+Every target works with either `make <target>` or `./run.sh <target>`:
+
+| Target | Does |
+|--------|------|
+| `deps` | read-only preflight (checks prerequisites) |
+| `install` | `deps` + everything: binaries, conda tools, visidata |
+| `binaries` / `conda-tools` / `pip-tools` | install just one group |
+| `<tool>` | install a single tool (e.g. `make fzf`); prefix `FORCE=1` to reinstall |
+| `freeze` | pin every tool's current version → `versions.lock` |
+| `setup` | wire `~/bin` + tool init into your shell rc |
+| `check` | report what's installed and where |
+| `uninstall` | remove the `~/bin` binaries this repo installed |
+| `miniforge` | bootstrap Miniforge under `~/miniforge3` |
+| `help` | list all targets |
+
+## Prerequisites
+
+Required (all present on a stock Debian/Ubuntu): `curl`, `tar`, `gzip`,
+`python3`. `unzip`/`bzip2`/`xz` are **not** required — Python's `zipfile`/`bz2`/
+`lzma` modules cover those archive formats so nothing extra needs installing.
+
+`make` is optional (use `./run.sh` instead). A C compiler is **not** needed —
+every tool is a prebuilt binary or a conda/pip package.
+
+> GitHub's API allows 60 unauthenticated requests/hour, and a full install makes
+> ~30 (one per binary tool). If you hit the limit, `export GITHUB_TOKEN=...`
+> (any classic token, no scopes needed) to raise it, then rerun.
+
+## What gets installed
+
+| Tool | Replaces / does | Method |
+|------|-----------------|--------|
+| **bat** | `cat` with syntax highlighting | binary |
+| **eza** | `ls` with colours, git, tree | binary |
+| **fd** | `find`, saner + faster | binary |
+| **rg** (ripgrep) | recursive `grep` | binary |
+| **sd** | `sed` for simple substitutions | binary |
+| **dust** | `du` as a tree | binary |
+| **duf** | `df`, friendlier | binary |
+| **procs** | `ps`, structured | binary |
+| **btop** | `top`/`htop` TUI monitor | binary |
+| **delta** | `git diff` pager | binary |
+| **hyperfine** | command-line benchmarking | binary |
+| **jq** | JSON query/transform | binary |
+| **yq** | YAML query/transform | binary |
+| **mlr** (Miller) | awk/cut for CSV/TSV/JSON | binary |
+| **csvtk** | CSV/TSV toolkit | binary |
+| **seqkit** | FASTA/FASTQ toolkit | binary |
+| **fzf** | fuzzy finder | binary |
+| **zoxide** | smarter `cd` | binary |
+| **atuin** | searchable shell history (`Ctrl-R`) | binary |
+| **yazi** (+`ya`) | TUI file manager | binary |
+| **broot** | fuzzy tree navigation | binary |
+| **starship** | cross-shell prompt | binary |
+| **direnv** | per-directory environments | binary |
+| **just** | friendlier `make` for tasks | binary |
+| **chezmoi** | dotfile manager | binary |
+| **xh** | ergonomic HTTP client (curl alt) | binary |
+| **tldr** (tealdeer) | example-first man pages | binary |
+| **gh** | GitHub CLI | binary |
+| **pandoc** | universal document converter | binary |
+| **viddy** | a modern `watch` | binary |
+| **tmux** | terminal multiplexer | conda-forge |
+| **zsh** | the shell | conda-forge |
+| **datamash** | group-by statistics | conda-forge |
+| **parallel** (GNU) | run jobs across cores | conda-forge |
+| **pv** | pipe progress / throughput | conda-forge |
+| **visidata** (`vd`) | interactive TUI for tabular data | pipx / pip / conda |
+
+Binaries download straight from GitHub releases into `~/bin`, pinned to the
+versions in `versions.lock` (see [Reproducibility](#reproducibility-version-pinning)).
+`tmux`, `zsh`, `datamash`, `parallel`, and `pv` have no clean static binary
+upstream, so they come from conda-forge — if no `conda` is found, `make install`
+bootstraps Miniforge under `~/miniforge3` automatically. `visidata` is pure
+Python (`pipx` → `pip --user` → conda fallback).
+
+## How it works
+
+```
+Makefile / run.sh              entry points (identical targets; run.sh needs no make)
+lib.sh                         shared helpers: download, extract, idempotency, pins, conda
+binaries.tsv                   manifest: tool → repo → asset regex → binaries
+versions.lock                  pinned version/tag per tool (generated by make freeze)
+deps.sh                        read-only preflight
+scripts/binary.sh              install one binary tool from binaries.tsv
+scripts/freeze.sh              resolve current versions → versions.lock
+scripts/miniforge.sh           bootstrap Miniforge (no-root)
+scripts/{tmux,zsh,datamash,parallel,pv}.sh   conda-forge installs
+scripts/visidata.sh            pipx / pip / conda install
+scripts/setup_shell.sh         wire the shell rc
+scripts/status.sh              back the check target
+scripts/uninstall.sh           remove installed ~/bin binaries
+shell/init.sh                  PATH + tool init, sourced by your shell rc
+README.md · cheatsheet.md      this guide + per-tool usage examples
+```
+
+Binaries are picked by matching a regex against each release asset's URL, so the
+asset name is never hard-coded even when a version is pinned. It's built for
+**x86_64 Linux**; to target another arch, edit the regexes in `binaries.tsv`.
+
+## Reproducibility (version pinning)
+
+Every tool is pinned in `versions.lock` — a small, git-tracked lockfile:
+
+```
+name        channel        version-or-tag
+bat         gh             v0.26.1
+delta       gh             0.19.2
+tmux        conda          3.7b_
+visidata    pip            3.4
+```
+
+- **GitHub tools** install from `releases/tags/<tag>` (the exact tag), not
+  `latest`. **conda/pip tools** install `pkg=version`.
+- **Refresh the pins** to current upstream at any time:
+
+  ```sh
+  make freeze     # or: ./run.sh freeze  — rewrites versions.lock
+  ```
+
+- **Unpin** one tool by deleting its line (it falls back to latest); delete the
+  whole file to unpin everything.
+- **Commit `versions.lock`** to reproduce the exact same tool set on another
+  machine or later in time.
+
+Because a full install (or freeze) makes ~30 GitHub API calls and the
+unauthenticated limit is 60/hour, `export GITHUB_TOKEN=...` if you hit it.
+
+**Adding a tool** is one line in `binaries.tsv`:
+
+```
+name<TAB>owner/repo<TAB>asset-regex<TAB>[binaries]
+```
+
+then add `name` to `BINTOOLS` in the `Makefile` (and `run.sh`).
+
+## Shell integration
+
+`make setup` appends a small guarded block to `~/.bashrc` (and `~/.zshrc` if it
+exists) that sources `shell/init.sh`. That file:
+
+- puts `~/bin`, `~/.local/bin`, and `~/miniforge3/bin` on `PATH`;
+- initialises `starship`, `zoxide`, `atuin`, `direnv`, and `fzf` for bash/zsh.
+
+Optional aliases (`cat`→`bat`, `ls`→`eza`, …) are included but **commented out**
+in `shell/init.sh` — uncomment the ones you want. Because `zsh` is installed
+later, re-run `make setup` after it exists to wire your `~/.zshrc`.
+
+## After installing
+
+`make setup` handles `PATH` and auto-initialises starship/zoxide/atuin/direnv/fzf.
+Two tools need one manual step:
+
+- **delta** does nothing until git is told to use it — add to `~/.gitconfig`:
+
+  ```ini
+  [core]
+      pager = delta
+  [interactive]
+      diffFilter = delta --color-only
+  [delta]
+      navigate = true
+  ```
+
+- **zsh** (optional) — make it your login shell with
+  `chsh -s "$(command -v zsh)"` (the shell must be listed in `/etc/shells`;
+  otherwise just run `exec zsh`, or add the path to `/etc/shells` first).
+
+Everything else works the moment it's on `PATH`. Run `make check` to confirm.
+
+## Uninstall
+
+```sh
+make uninstall   # removes the ~/bin binaries this repo installed
+```
+
+Conda tools, `visidata`, Miniforge, and your rc edits are left untouched (remove
+`~/miniforge3` and the `# >>> terminal-setup >>>` block by hand if you want).
+
+## Intentionally omitted
+
+The talk lists many competing alternatives; this setup keeps one per category.
+Deliberately **not** installed:
+
+- **GUI terminal emulators** (Warp, Ghostty, kitty, WezTerm, Alacritty, foot,
+  iTerm2) — these are graphical apps, not CLI tools, and iTerm2 is macOS-only.
+- **Category alternatives** — fish/nushell (vs zsh), zellij (vs tmux),
+  bottom/`btm` (vs btop), ranger/nnn/lf (vs yazi), w3m/lynx/browsh (text
+  browsers), mutt/aerc/himalaya (email), pixi/mamba (vs the Miniforge base).
+
+To add any of them, drop a row in `binaries.tsv` (if it ships a Linux binary) or
+`conda install -c conda-forge <pkg>`.

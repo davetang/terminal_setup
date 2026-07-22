@@ -1,0 +1,50 @@
+# binaries.tsv — tools installed as prebuilt binaries into ~/bin.
+# Columns (TAB-separated):  name <TAB> owner/repo <TAB> asset-regex <TAB> [bins]
+#   name        make target + default binary name
+#   owner/repo  GitHub repo whose *latest* release is queried
+#   asset-regex extended regex matched against each asset's download URL
+#   bins        space-separated binaries to pull out (defaults to <name>)
+# Built for x86_64 Linux. Edit a regex here to change arch or pin behaviour.
+# Lines starting with # are ignored.
+#
+# --- modern coreutils replacements ---
+bat	sharkdp/bat	bat-v[0-9.]+-x86_64-unknown-linux-(musl|gnu)\.tar\.gz$
+eza	eza-community/eza	eza_x86_64-unknown-linux-(musl|gnu)\.tar\.gz$
+fd	sharkdp/fd	fd-v[0-9.]+-x86_64-unknown-linux-(musl|gnu)\.tar\.gz$
+rg	BurntSushi/ripgrep	ripgrep-[0-9.]+-x86_64-unknown-linux-(musl|gnu)\.tar\.gz$
+sd	chmln/sd	sd-v[0-9.]+-x86_64-unknown-linux-(musl|gnu)\.tar\.gz$
+dust	bootandy/dust	dust-v[0-9.]+-x86_64-unknown-linux-(musl|gnu)\.tar\.gz$
+duf	muesli/duf	duf_[0-9.]+_linux_x86_64\.tar\.gz$
+procs	dalance/procs	procs-v[0-9.]+-x86_64-linux\.zip$
+btop	aristocratos/btop	btop-x86_64-unknown-linux-musl\.tar\.gz$
+delta	dandavison/delta	delta-[0-9.]+-x86_64-unknown-linux-(musl|gnu)\.tar\.gz$
+hyperfine	sharkdp/hyperfine	hyperfine-v[0-9.]+-x86_64-unknown-linux-(musl|gnu)\.tar\.gz$
+#
+# --- data wrangling ---
+jq	jqlang/jq	jq-linux-amd64$
+yq	mikefarah/yq	yq_linux_amd64$
+mlr	johnkerl/miller	miller-[0-9.]+-linux-amd64\.tar\.gz$
+csvtk	shenwei356/csvtk	csvtk_linux_amd64\.tar\.gz$
+seqkit	shenwei356/seqkit	seqkit_linux_amd64\.tar\.gz$
+#
+# --- navigation / finding ---
+fzf	junegunn/fzf	fzf-[0-9.]+-linux_amd64\.tar\.gz$
+zoxide	ajeetdsouza/zoxide	zoxide-[0-9.]+-x86_64-unknown-linux-musl\.tar\.gz$
+atuin	atuinsh/atuin	atuin-x86_64-unknown-linux-(musl|gnu)\.tar\.gz$
+yazi	sxyazi/yazi	yazi-x86_64-unknown-linux-(musl|gnu)\.zip$	yazi ya
+broot	Canop/broot	broot_[0-9.]+\.zip$
+#
+# --- prompt / shell UX ---
+starship	starship/starship	starship-x86_64-unknown-linux-musl\.tar\.gz$
+direnv	direnv/direnv	direnv\.linux-amd64$
+#
+# --- project / dotfiles / misc ---
+just	casey/just	just-[0-9.]+-x86_64-unknown-linux-musl\.tar\.gz$
+chezmoi	twpayne/chezmoi	chezmoi_[0-9.]+_linux_amd64\.tar\.gz$
+xh	ducaale/xh	xh-v[0-9.]+-x86_64-unknown-linux-(musl|gnu)\.tar\.gz$
+tldr	dbrgn/tealdeer	tealdeer-linux-x86_64-musl$
+#
+# --- from install_scripts (davetang) ---
+gh	cli/cli	gh_[0-9.]+_linux_amd64\.tar\.gz$
+pandoc	jgm/pandoc	pandoc-[0-9.]+-linux-amd64\.tar\.gz$
+viddy	sachaos/viddy	viddy-v[0-9.]+-linux-x86_64\.tar\.gz$
