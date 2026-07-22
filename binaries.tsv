@@ -5,6 +5,8 @@
 #   asset-regex extended regex matched against each asset's download URL
 #   bins        space-separated binaries to pull out (defaults to <name>)
 # Built for x86_64 Linux. Edit a regex here to change arch or pin behaviour.
+# When a regex matches both a musl and a glibc asset, the musl one wins (it's
+# static, so it runs on any glibc). Write a gnu-only regex to override that.
 # Lines starting with # are ignored.
 #
 # --- modern coreutils replacements ---

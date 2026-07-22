@@ -65,15 +65,20 @@ _gh_api() {
 }
 
 # gh_asset <owner/repo> <regex> [<tag>]: print the browser_download_url of the
-# first asset whose URL matches <regex>, from release <tag> (or latest if empty).
+# asset whose URL matches <regex>, from release <tag> (or latest if empty).
+# When several assets match — typically a musl and a glibc build of the same
+# tool — prefer musl. A glibc build is linked against whatever libc its CI
+# runner had, which is often newer than ours, and then dies at startup with
+# "version `GLIBC_2.xx' not found". The musl builds are static and always run.
 gh_asset() {
-  local repo="$1" re="$2" tag="${3:-}" ep
+  local repo="$1" re="$2" tag="${3:-}" ep urls
   if [[ -n "$tag" ]]; then ep="repos/$repo/releases/tags/$tag"
   else ep="repos/$repo/releases/latest"; fi
-  _gh_api "$ep" \
+  urls="$(_gh_api "$ep" \
     | grep -oE '"browser_download_url":[[:space:]]*"[^"]+"' \
     | sed -E 's/.*"(https[^"]+)".*/\1/' \
-    | grep -E "$re" | head -1
+    | grep -E "$re")" || return 0
+  { grep -E 'musl' <<<"$urls" || true; printf '%s\n' "$urls"; } | head -1
 }
 
 # gh_latest_tag <owner/repo>: print the tag_name of the latest release.
@@ -151,14 +156,31 @@ install_binary() {
     for b in $bins; do
       src="$(_find_bin "$d" "$b")" || die "$name: binary '$b' not found inside ${url##*/}"
       install -m 0755 "$src" "$BIN/$b"
+      _check_libc "$BIN/$b"
       ok "$b -> $BIN/$b"
     done
   else
     # Raw (uncompressed) binary asset.
     install -m 0755 "$file" "$BIN/$first"
+    _check_libc "$BIN/$first"
     ok "$first -> $BIN/$first"
   fi
   log "$name done  (${url##*/})"
+}
+
+# _check_libc <path>: warn if a freshly installed binary can't resolve its
+# dynamic libraries here — nearly always a glibc older than the one it was
+# built against. Catches it now instead of at first use, when the message
+# ("version `GLIBC_2.xx' not found") shows up mid-session with no context.
+# Static builds report "not a dynamic executable" and pass.
+_check_libc() {
+  local p="$1" out
+  have ldd || return 0
+  out="$(ldd "$p" 2>&1 || true)"
+  grep -q 'not found' <<<"$out" || return 0
+  warn "$(basename "$p") cannot run on this host:"
+  grep 'not found' <<<"$out" | sed 's/^/     /' >&2
+  warn "this release has no build for our libc ($(ldd --version 2>/dev/null | head -1)) — pin an older version in versions.lock, or install it from conda-forge"
 }
 
 # _find_bin <dir> <name>: locate the right executable named <name> in an

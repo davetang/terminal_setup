@@ -176,6 +176,13 @@ Binaries are picked by matching a regex against each release asset's URL, so the
 asset name is never hard-coded even when a version is pinned. It's built for
 **x86_64 Linux**; to target another arch, edit the regexes in `binaries.tsv`.
 
+When a regex matches both a **musl** and a **glibc** build, the musl one wins.
+Upstream links its glibc builds against whatever libc the CI runner had — often
+newer than an LTS distro's — and the binary then fails at startup with
+``version `GLIBC_2.xx' not found``. The musl builds are static and always run.
+After each install the binary is checked with `ldd`, so a tool that ships no
+static build is flagged straight away rather than at first use.
+
 ## Reproducibility (version pinning)
 
 Every tool is pinned in `versions.lock` — a small, git-tracked lockfile:
