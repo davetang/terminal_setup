@@ -312,7 +312,19 @@ Four tools need one manual step:
       diffFilter = delta --color-only
   [delta]
       navigate = true
+      dark = true
   ```
+
+  `dark = true` (use `light` on a light terminal) is the delta counterpart of
+  the pinned `BAT_THEME` above, and fixes the same bug. Left unset, delta
+  auto-detects light/dark by *querying* the terminal — an `OSC 11` + `DA1`
+  escape sequence, via the `terminal-colorsaurus` library — and the reply is
+  delivered as **input**. Under screen/tmux that reply can arrive after delta
+  has handed off to `less`, which then reads the stray `rgb:…` bytes as
+  keypresses (delta's docs note the query "causes race conditions with pagers
+  such as less"). Telling delta the mode up front skips the probe entirely;
+  pinning `syntax-theme` alone does **not** — only `dark`/`light` short-circuits
+  the detection.
 
 - **zsh** (optional) — make it your login shell with
   `chsh -s "$(command -v zsh)"` (the shell must be listed in `/etc/shells`;

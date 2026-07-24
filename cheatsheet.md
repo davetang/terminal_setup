@@ -29,6 +29,7 @@ btop                        # top/htop TUI; q to quit
 # delta: add to ~/.gitconfig
 #   [core] pager = delta
 #   [interactive] diffFilter = delta --color-only
+#   [delta] dark = true   # or light; skips delta's terminal colour probe (see README)
 git diff                    # now syntax-highlighted, side-by-side with -s
 hyperfine 'rg foo' 'grep -r foo .'   # benchmark & compare commands
 hyperfine --warmup 3 './build.sh'
