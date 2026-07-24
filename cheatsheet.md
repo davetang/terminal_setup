@@ -74,6 +74,17 @@ viddy -n 2 kubectl get pods         # a modern `watch`: re-run every 2s
 viddy -d 'date; free -h'            # -d highlights what changed between runs
 ```
 
+## Web log analysis (goaccess)
+
+```sh
+goaccess access.log --log-format=COMBINED           # interactive TUI dashboard; q quits
+goaccess access.log --log-format=COMBINED -o report.html    # static HTML report
+zcat access.log.*.gz | goaccess --log-format=COMBINED -     # read rotated/gz logs via stdin
+goaccess access.log --log-format=COMBINED \
+  -o report.html --real-time-html                   # live HTML, updates over a websocket
+goaccess access.log --log-format=CLF                # common log format; also VCOMBINED, W3C, …
+```
+
 ## LLM queries (llm)
 
 ```sh

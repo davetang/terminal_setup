@@ -106,14 +106,15 @@ every tool is a prebuilt binary or a conda/pip package.
 | **datamash** | group-by statistics | conda-forge |
 | **parallel** (GNU) | run jobs across cores | conda-forge |
 | **pv** | pipe progress / throughput | conda-forge |
+| **goaccess** | real-time web log analyzer (TUI/HTML) | conda-forge |
 | **visidata** (`vd`) | interactive TUI for tabular data | pipx / pip / conda |
 | **llm** | prompt LLMs from the shell, pipe text into them | pipx / pip / conda |
 
 Binaries download straight from GitHub releases into `~/bin`, pinned to the
 versions in `versions.lock` (see [Reproducibility](#reproducibility-version-pinning)).
 `ollama` is the odd one out — see [ollama, client only](#ollama-client-only).
-`tmux`, `zsh`, `datamash`, `parallel`, and `pv` have no clean static binary
-upstream, so they come from conda-forge — if no `conda` is found, `make install`
+`tmux`, `zsh`, `datamash`, `parallel`, `pv`, and `goaccess` have no clean static
+binary upstream, so they come from conda-forge — if no `conda` is found, `make install`
 bootstraps Miniforge under `~/miniforge3` automatically. `visidata` and `llm`
 are pure Python (`pipx` → `pip --user` → conda fallback).
 
@@ -213,7 +214,7 @@ deps.sh                        read-only preflight
 scripts/binary.sh              install one binary tool from binaries.tsv
 scripts/freeze.sh              resolve current versions → versions.lock
 scripts/miniforge.sh           bootstrap Miniforge (no-root)
-scripts/{tmux,zsh,datamash,parallel,pv}.sh   conda-forge installs
+scripts/{tmux,zsh,datamash,parallel,pv,goaccess}.sh   conda-forge installs
 scripts/{visidata,llm}.sh      pipx / pip / conda installs
 scripts/ollama.sh              stream the ollama CLI out of upstream's bundle
 scripts/setup_shell.sh         wire the shell rc

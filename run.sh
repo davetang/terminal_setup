@@ -15,7 +15,7 @@ BINTOOLS=(bat eza fd rg sd dust duf procs btop delta hyperfine
           starship direnv
           just chezmoi xh tldr
           gh pandoc viddy)
-CONDATOOLS=(tmux zsh datamash parallel pv)
+CONDATOOLS=(tmux zsh datamash parallel pv goaccess)
 PIPTOOLS=(visidata llm)
 
 do_binaries()  { local b; for b in "${BINTOOLS[@]}";  do "$here/scripts/binary.sh" "$b"; done; }
