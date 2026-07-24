@@ -79,10 +79,20 @@ viddy -d 'date; free -h'            # -d highlights what changed between runs
 ```sh
 goaccess access.log --log-format=COMBINED           # interactive TUI dashboard; q quits
 goaccess access.log --log-format=COMBINED -o report.html    # static HTML report
-zcat access.log.*.gz | goaccess --log-format=COMBINED -     # read rotated/gz logs via stdin
 goaccess access.log --log-format=COMBINED \
   -o report.html --real-time-html                   # live HTML, updates over a websocket
 goaccess access.log --log-format=CLF                # common log format; also VCOMBINED, W3C, …
+
+# text output (not HTML): CSV or JSON — format is chosen by the -o extension
+goaccess access.log --log-format=COMBINED -o report.csv     # tabular, greppable
+goaccess access.log --log-format=COMBINED --no-csv-summary -o report.csv   # drop the summary rows
+goaccess access.log --log-format=COMBINED -o report.json    # structured, for post-processing
+zcat access.log.*.gz | goaccess --log-format=COMBINED -o report.csv -      # rotated/gz logs via stdin
+
+# read the text output back with tools this setup installs
+vd report.csv                       # visidata: interactive table, q quits
+csvtk pretty report.csv | bat       # aligned table, paged
+jq '.general' report.json           # pull one section out of the JSON
 ```
 
 ## LLM queries (llm)
