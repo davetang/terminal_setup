@@ -14,9 +14,12 @@ BINTOOLS := bat eza fd rg sd dust duf procs btop delta hyperfine \
 # Tools with no clean static binary — installed from conda-forge.
 CONDATOOLS := tmux zsh datamash parallel pv
 
+# Pure-Python tools — installed with pipx/pip (conda-forge as a fallback).
+PIPTOOLS := visidata llm
+
 .PHONY: help deps check install setup uninstall miniforge freeze \
-        binaries conda-tools pip-tools visidata ollama \
-        $(BINTOOLS) $(CONDATOOLS)
+        binaries conda-tools pip-tools ollama \
+        $(BINTOOLS) $(CONDATOOLS) $(PIPTOOLS)
 
 help: ## Show this help
 	@echo "no-root terminal setup — installs modern CLI tools under \$$HOME/bin"
@@ -50,10 +53,10 @@ conda-tools: $(CONDATOOLS) ## Install conda-forge tools (tmux, zsh, datamash, pa
 $(CONDATOOLS): miniforge
 	@$(ROOT)scripts/$@.sh
 
-pip-tools: visidata ## Install pip/pipx tools (visidata)
+pip-tools: $(PIPTOOLS) ## Install pip/pipx tools (visidata, llm)
 
-visidata:
-	@$(ROOT)scripts/visidata.sh
+$(PIPTOOLS):
+	@$(ROOT)scripts/$@.sh
 
 ollama: ## Install the ollama CLI, client only (queries a server, can't serve)
 	@$(ROOT)scripts/ollama.sh

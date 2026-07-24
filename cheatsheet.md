@@ -73,6 +73,27 @@ viddy -n 2 kubectl get pods         # a modern `watch`: re-run every 2s
 viddy -d 'date; free -h'            # -d highlights what changed between runs
 ```
 
+## LLM queries (llm)
+
+```sh
+llm keys set openai                 # store a key once (~/.config/io.datasette.llm)
+llm 'ten names for a pet lobster'   # one-shot prompt, streams the answer
+llm 'more names' -c                 # -c continues the previous conversation
+llm -m gpt-4o 'harder question'     # pick a model; llm models lists them
+cat script.py | llm -s 'explain this code'      # -s is the system prompt
+git diff | llm -s 'write a commit message'
+llm -f README.md 'summarise this'   # -f takes a file path or a URL
+llm -a diagram.png 'describe this'  # -a attaches an image (multi-modal models)
+llm chat -m gpt-4o                  # interactive session; 'exit' quits
+llm -s 'write pytest tests for this code' --save pytest   # save a template
+cat utils.py | llm -t pytest        # ...and reuse it with -t
+llm logs -n 3                       # last 3 prompts+responses (SQLite-backed)
+llm logs -r                         # just the most recent response, plain text
+llm logs -q docker                  # search past prompts
+llm install llm-ollama              # plugins add providers: ollama, anthropic, gemini
+llm models                          # every model available to you right now
+```
+
 ## LLM queries (ollama, client only)
 
 ```sh
@@ -87,6 +108,29 @@ ollama show qwen3                   # model params, context length, licence
 ollama pull qwen3                   # tell the server to fetch a model
 ollama --version                    # client version (warns if no server)
 # no `ollama serve` — this install has the CLI, not the inference runners
+```
+
+## LLM queries (llm + ollama)
+
+The `llm-ollama` plugin registers every model on your Ollama server with
+`llm`, so the whole `llm` toolkit above — templates, fragments, logs — works
+against local models with no API key and nothing leaving your network.
+
+```sh
+llm install llm-ollama              # one-off; adds the server's models to llm
+export OLLAMA_HOST=http://gpu-box:11434   # same var the ollama client reads
+llm ollama models                   # what's on the server, + capabilities
+llm models                          # ...listed with every other provider
+llm -m qwen3 'explain this error'   # ':latest' models also get a short alias
+llm -m qwen3:4b 'pin the tag when you need a specific one'
+cat notes.md | llm -m qwen3 -s 'summarise in five bullets'
+llm 'and shorter' -c                # -c continues, keeping the same model
+llm chat -m qwen3                   # interactive session; 'exit' quits
+llm models default qwen3            # make it the default: plain `llm '...'`
+llm -m llava 'describe this' -a shot.png        # vision models take -a
+llm -m llama3.2 --schema 'name, age int, bio' 'invent a dog'   # JSON out
+llm embed -m mxbai-embed-large -i README.md     # embeddings, same server
+llm logs -n 1 -r                    # local prompts are logged like any other
 ```
 
 ## Navigation & finding

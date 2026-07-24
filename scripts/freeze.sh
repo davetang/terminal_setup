@@ -3,7 +3,7 @@
 # pinning the whole set for reproducible installs. Re-run any time to refresh.
 #   GitHub tools  -> exact release tag_name (one API call each)
 #   conda tools   -> conda-forge latest_version (anaconda.org API)
-#   visidata      -> latest on PyPI
+#   pip tools     -> latest on PyPI
 set -euo pipefail
 source "$(cd "$(dirname "$0")/.." && pwd)/lib.sh"
 set +e   # resolve as much as possible; skip anything that can't be reached
@@ -46,11 +46,13 @@ for p in tmux zsh datamash parallel pv; do
   else warn "$p: conda version unresolved (left unpinned)"; fi
 done
 
-log "resolving PyPI version…"
-v="$(curl -fsSL https://pypi.org/pypi/visidata/json \
-      | python3 -c 'import sys,json; print(json.load(sys.stdin)["info"]["version"])' 2>/dev/null)"
-if [[ -n "$v" ]]; then printf 'visidata\tpip\t%s\n' "$v" >> "$tmp"; ok "visidata -> $v"
-else warn "visidata: PyPI version unresolved (left unpinned)"; fi
+log "resolving PyPI versions…"
+for p in visidata llm; do
+  v="$(curl -fsSL "https://pypi.org/pypi/$p/json" \
+        | python3 -c 'import sys,json; print(json.load(sys.stdin)["info"]["version"])' 2>/dev/null)"
+  if [[ -n "$v" ]]; then printf '%s\tpip\t%s\n' "$p" "$v" >> "$tmp"; ok "$p -> $v"
+  else warn "$p: PyPI version unresolved (left unpinned)"; fi
+done
 
 mv "$tmp" "$out"
 echo

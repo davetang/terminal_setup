@@ -43,8 +43,18 @@ unset _ts_sh _ts_starship
 
 # --- ollama (client only) ---
 # The installed ollama can query a server but not run one. Uncomment and point
-# it at yours; the default is http://127.0.0.1:11434.
+# it at yours; the default is http://127.0.0.1:11434. The llm-ollama plugin
+# reads the same variable, so setting it here covers both tools.
 # export OLLAMA_HOST=http://gpu-box:11434
+
+# --- llm ---
+# Keys are normally stored with 'llm keys set <name>' (in
+# ~/.config/io.datasette.llm/keys.json), so nothing is needed here. Environment
+# variables are the alternative if you'd rather not keep keys on disk:
+# export OPENAI_API_KEY=...      # the built-in OpenAI models
+# export ANTHROPIC_API_KEY=...   # needs: llm install llm-anthropic
+# LLM_MODEL overrides the default model for this shell only:
+# export LLM_MODEL=gpt-4.1-mini
 
 # --- optional aliases (uncomment the ones you want) ---
 # command -v bat  >/dev/null 2>&1 && alias cat='bat --paging=never'

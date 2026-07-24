@@ -16,9 +16,11 @@ BINTOOLS=(bat eza fd rg sd dust duf procs btop delta hyperfine
           just chezmoi xh tldr
           gh pandoc viddy)
 CONDATOOLS=(tmux zsh datamash parallel pv)
+PIPTOOLS=(visidata llm)
 
 do_binaries()  { local b; for b in "${BINTOOLS[@]}";  do "$here/scripts/binary.sh" "$b"; done; }
 do_conda()     { local c; for c in "${CONDATOOLS[@]}"; do "$here/scripts/$c.sh"; done; }
+do_pip()       { local p; for p in "${PIPTOOLS[@]}";  do "$here/scripts/$p.sh"; done; }
 
 t="${1:-help}"
 case "$t" in
@@ -26,7 +28,7 @@ case "$t" in
     echo "usage: ./run.sh <target>"
     echo "  deps check freeze install setup uninstall"
     echo "  binaries conda-tools pip-tools miniforge"
-    echo "  <tool>   any of: ${BINTOOLS[*]} ${CONDATOOLS[*]} visidata ollama" ;;
+    echo "  <tool>   any of: ${BINTOOLS[*]} ${CONDATOOLS[*]} ${PIPTOOLS[*]} ollama" ;;
   deps)        "$here/deps.sh" ;;
   check)       "$here/scripts/status.sh" ;;
   freeze)      "$here/scripts/freeze.sh" ;;
@@ -35,14 +37,15 @@ case "$t" in
   miniforge)   "$here/scripts/miniforge.sh" ;;
   binaries)    do_binaries ;;
   conda-tools) do_conda ;;
-  pip-tools|visidata) "$here/scripts/visidata.sh" ;;
+  pip-tools)   do_pip ;;
   ollama)      "$here/scripts/ollama.sh" ;;
   install)
-    "$here/deps.sh"; do_binaries; do_conda; "$here/scripts/visidata.sh"
+    "$here/deps.sh"; do_binaries; do_conda; do_pip
     "$here/scripts/ollama.sh"
     echo; ok "Done. Next: ./run.sh setup, then restart your shell." ;;
   *)
     if printf '%s\n' "${BINTOOLS[@]}"  | grep -qx "$t"; then "$here/scripts/binary.sh" "$t"
     elif printf '%s\n' "${CONDATOOLS[@]}" | grep -qx "$t"; then "$here/scripts/$t.sh"
+    elif printf '%s\n' "${PIPTOOLS[@]}"   | grep -qx "$t"; then "$here/scripts/$t.sh"
     else die "unknown target '$t' — try ./run.sh help"; fi ;;
 esac

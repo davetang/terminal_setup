@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # uninstall.sh — remove the ~/bin binaries this repo installed.
-# Leaves conda tools, pip (visidata), Miniforge and rc edits alone.
+# Leaves conda tools, pip tools (visidata, llm), Miniforge and rc edits alone.
 set -euo pipefail
 source "$(cd "$(dirname "$0")/.." && pwd)/lib.sh"
 
@@ -16,4 +16,4 @@ for b in "${bins[@]}"; do
   if [[ -e "$BIN/$b" ]]; then rm -f "$BIN/$b"; ok "removed $BIN/$b"; n=$((n+1)); fi
 done
 log "removed $n binaries from $BIN"
-warn "conda tools, visidata, Miniforge and rc edits were left in place"
+warn "conda tools, visidata, llm, Miniforge and rc edits were left in place"

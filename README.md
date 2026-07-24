@@ -2,7 +2,7 @@
 
 A self-contained, **no-root** setup for a modern terminal. Everything installs
 under `$HOME` (`~/bin` for release binaries, `~/miniforge3` for the conda tools,
-`~/.local/bin` for visidata) and nothing outside this directory is needed. Built
+`~/.local/bin` for the pip tools) and nothing outside this directory is needed. Built
 the same way as
 [`nvim_setup`](https://github.com/davetang/nvim_setup): a `Makefile` that
 delegates to small, idempotent shell scripts.
@@ -41,7 +41,7 @@ Every target works with either `make <target>` or `./run.sh <target>`:
 | Target | Does |
 |--------|------|
 | `deps` | read-only preflight (checks prerequisites) |
-| `install` | `deps` + everything: binaries, conda tools, visidata |
+| `install` | `deps` + everything: binaries, conda tools, pip tools, ollama |
 | `binaries` / `conda-tools` / `pip-tools` | install just one group |
 | `<tool>` | install a single tool (e.g. `make fzf`); prefix `FORCE=1` to reinstall |
 | `freeze` | pin every tool's current version → `versions.lock` |
@@ -56,6 +56,8 @@ Every target works with either `make <target>` or `./run.sh <target>`:
 Required (all present on a stock Debian/Ubuntu): `curl`, `tar`, `gzip`,
 `python3`. `unzip`/`bzip2`/`xz` are **not** required — Python's `zipfile`/`bz2`/
 `lzma` modules cover those archive formats so nothing extra needs installing.
+Any `python3` will do; `llm` alone wants ≥ 3.10 and falls back to conda-forge
+below that.
 
 `make` is optional (use `./run.sh` instead). A C compiler is **not** needed —
 every tool is a prebuilt binary or a conda/pip package.
@@ -105,14 +107,15 @@ every tool is a prebuilt binary or a conda/pip package.
 | **parallel** (GNU) | run jobs across cores | conda-forge |
 | **pv** | pipe progress / throughput | conda-forge |
 | **visidata** (`vd`) | interactive TUI for tabular data | pipx / pip / conda |
+| **llm** | prompt LLMs from the shell, pipe text into them | pipx / pip / conda |
 
 Binaries download straight from GitHub releases into `~/bin`, pinned to the
 versions in `versions.lock` (see [Reproducibility](#reproducibility-version-pinning)).
 `ollama` is the odd one out — see [ollama, client only](#ollama-client-only).
 `tmux`, `zsh`, `datamash`, `parallel`, and `pv` have no clean static binary
 upstream, so they come from conda-forge — if no `conda` is found, `make install`
-bootstraps Miniforge under `~/miniforge3` automatically. `visidata` is pure
-Python (`pipx` → `pip --user` → conda fallback).
+bootstraps Miniforge under `~/miniforge3` automatically. `visidata` and `llm`
+are pure Python (`pipx` → `pip --user` → conda fallback).
 
 ## ollama, client only
 
@@ -151,6 +154,54 @@ script finds a decompressor in this order: the `zstd`/`unzstd` CLI → `python3`
 (3.14's `compression.zstd`, or the `zstandard`/`pyzstd` modules) → `zstd` from
 conda-forge. `make deps` reports which one you have.
 
+## llm
+
+[Simon Willison's `llm`](https://llm.datasette.io/) is the other half of the
+LLM story here: `ollama` speaks to one Ollama server, `llm` speaks to whatever
+you have — hosted APIs, local servers, or both — with the same syntax, and logs
+every prompt and response to SQLite so you can go back and find them.
+
+```sh
+make llm                          # or: ./run.sh llm
+llm keys set openai               # stored in ~/.config/io.datasette.llm/keys.json
+llm 'explain awk in three lines'
+git diff | llm -s 'write a commit message for these changes'
+llm logs -n 3                     # the last three prompts + responses
+```
+
+It's pure Python, so it installs the same way visidata does: `pipx` →
+`pip --user` → conda-forge. `llm` needs **Python ≥ 3.10**; on an older
+interpreter `make llm` skips pip and takes it from conda-forge, which brings its
+own Python. `make deps` tells you which way it'll go.
+
+**Other providers are plugins.** Only OpenAI works out of the box; everything
+else is `llm install <plugin>`, which pip-installs into llm's own environment
+regardless of how llm itself got there:
+
+```sh
+llm install llm-anthropic         # Claude models   (ANTHROPIC_API_KEY)
+llm install llm-gemini            # Gemini models   (llm keys set gemini)
+llm install llm-ollama            # every model on your Ollama server
+llm models                        # what's available now
+```
+
+`llm-ollama` reads the same `$OLLAMA_HOST` as the `ollama` client above, so
+pointing that one variable at your server gives you both the `ollama` CLI and
+`llm -m <model>` against it — no API key, nothing leaving your network:
+
+```sh
+export OLLAMA_HOST=http://gpu-box:11434
+llm -m qwen3 'summarise this' < notes.md
+llm chat -m qwen3                 # interactive; 'exit' quits
+```
+
+To install plugins as part of the install itself — handy when rebuilding a
+machine — list them in `TS_LLM_PLUGINS`. This works on an existing `llm` too:
+
+```sh
+TS_LLM_PLUGINS='llm-ollama llm-anthropic' make llm
+```
+
 ## How it works
 
 ```
@@ -163,7 +214,7 @@ scripts/binary.sh              install one binary tool from binaries.tsv
 scripts/freeze.sh              resolve current versions → versions.lock
 scripts/miniforge.sh           bootstrap Miniforge (no-root)
 scripts/{tmux,zsh,datamash,parallel,pv}.sh   conda-forge installs
-scripts/visidata.sh            pipx / pip / conda install
+scripts/{visidata,llm}.sh      pipx / pip / conda installs
 scripts/ollama.sh              stream the ollama CLI out of upstream's bundle
 scripts/setup_shell.sh         wire the shell rc
 scripts/status.sh              back the check target
@@ -193,6 +244,7 @@ bat         gh             v0.26.1
 delta       gh             0.19.2
 tmux        conda          3.7b_
 visidata    pip            3.4
+llm         pip            0.31.1
 ```
 
 - **GitHub tools** install from `releases/tags/<tag>` (the exact tag), not
@@ -249,7 +301,7 @@ later, re-run `make setup` after it exists to wire your `~/.zshrc`.
 ## After installing
 
 `make setup` handles `PATH` and auto-initialises starship/zoxide/atuin/direnv/fzf.
-Three tools need one manual step:
+Four tools need one manual step:
 
 - **delta** does nothing until git is told to use it — add to `~/.gitconfig`:
 
@@ -269,6 +321,10 @@ Three tools need one manual step:
 - **ollama** needs a server to talk to — uncomment and edit the `OLLAMA_HOST`
   line in `shell/init.sh` (it defaults to `http://127.0.0.1:11434`).
 
+- **llm** needs a model to talk to — either a key (`llm keys set openai`) or a
+  plugin for something local (`llm install llm-ollama`, which reuses the same
+  `OLLAMA_HOST`). See [llm](#llm).
+
 Everything else works the moment it's on `PATH`. Run `make check` to confirm.
 
 ## Uninstall
@@ -277,8 +333,9 @@ Everything else works the moment it's on `PATH`. Run `make check` to confirm.
 make uninstall   # removes the ~/bin binaries this repo installed
 ```
 
-Conda tools, `visidata`, Miniforge, and your rc edits are left untouched (remove
-`~/miniforge3` and the `# >>> terminal-setup >>>` block by hand if you want).
+Conda tools, `visidata`, `llm`, Miniforge, and your rc edits are left untouched
+(`pipx uninstall llm`, remove `~/miniforge3`, and drop the
+`# >>> terminal-setup >>>` block by hand if you want).
 
 ## Intentionally omitted
 

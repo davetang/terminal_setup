@@ -36,9 +36,16 @@ else
 fi
 
 if have pipx || have pip3 || have pip; then
-  ok "pip/pipx available (for visidata)"
+  ok "pip/pipx available (for visidata and llm)"
 else
-  warn "no pip/pipx — visidata will fall back to conda-forge"
+  warn "no pip/pipx — visidata and llm will fall back to conda-forge"
+fi
+
+# llm needs Python >= 3.10; older interpreters get it from conda-forge instead.
+if python3 -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
+  ok "python3 $(python3 -V 2>&1 | awk '{print $2}') (>= 3.10, for llm)"
+else
+  warn "python3 older than 3.10 — llm will be installed from conda-forge instead"
 fi
 
 echo

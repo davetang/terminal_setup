@@ -34,6 +34,7 @@ tmux	conda	3.7b_
 zsh	conda	5.9
 datamash	conda	1.9
 visidata	pip	3.4
+llm	pip	0.31.1
 gh	gh	v2.96.0
 pandoc	gh	3.10
 viddy	gh	v1.3.1
