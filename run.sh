@@ -10,7 +10,7 @@ here="$(cd "$(dirname "$0")" && pwd)"
 source "$here/lib.sh"
 
 BINTOOLS=(bat eza fd rg sd dust duf procs btop delta hyperfine
-          jq yq mlr csvtk seqkit
+          jq yq mlr csvtk seqkit duckdb
           fzf zoxide atuin yazi broot
           starship direnv
           just chezmoi xh tldr

@@ -28,6 +28,10 @@ yq	mikefarah/yq	yq_linux_amd64$
 mlr	johnkerl/miller	miller-[0-9.]+-linux-amd64\.tar\.gz$
 csvtk	shenwei356/csvtk	csvtk_linux_amd64\.tar\.gz$
 seqkit	shenwei356/seqkit	seqkit_linux_amd64\.tar\.gz$
+# duckdb also ships a -musl asset, but it's *dynamically* linked against musl
+# (loader /lib/ld-musl-x86_64.so.1), so it dies with "No such file or directory"
+# on a glibc box. The musl-preference above would pick it — match glibc only.
+duckdb	duckdb/duckdb	duckdb_cli-linux-amd64\.zip$
 #
 # --- navigation / finding ---
 fzf	junegunn/fzf	fzf-[0-9.]+-linux_amd64\.tar\.gz$

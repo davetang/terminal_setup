@@ -45,6 +45,10 @@ mlr --c2p cat data.csv              # CSV -> pretty table
 mlr --icsv --opprint stats1 -a mean,sum -f x -g grp data.csv
 csvtk headers -t data.tsv
 csvtk cut -f name,score data.csv | csvtk sort -k score:nr
+duckdb -c "SELECT * FROM 'data.csv' LIMIT 5"    # run SQL straight over a CSV/Parquet/JSON file
+duckdb -c "SELECT count(*) FROM 'reads.parquet'"        # no import step; queries the file in place
+duckdb -c "COPY (SELECT * FROM 'data.csv') TO 'out.parquet'"    # convert between formats
+duckdb mydb.ddb                     # open a persistent database; REPL, .quit to exit
 seqkit stats reads.fq.gz            # FASTA/FASTQ summary
 seqkit seq -m 100 reads.fq          # filter by length
 datamash -t, mean 2 sum 3 < data.csv

@@ -5,7 +5,7 @@ ROOT  := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # Tools installed as prebuilt binaries into ~/bin (see binaries.tsv).
 BINTOOLS := bat eza fd rg sd dust duf procs btop delta hyperfine \
-            jq yq mlr csvtk seqkit \
+            jq yq mlr csvtk seqkit duckdb \
             fzf zoxide atuin yazi broot \
             starship direnv \
             just chezmoi xh tldr \

@@ -86,6 +86,7 @@ every tool is a prebuilt binary or a conda/pip package.
 | **mlr** (Miller) | awk/cut for CSV/TSV/JSON | binary |
 | **csvtk** | CSV/TSV toolkit | binary |
 | **seqkit** | FASTA/FASTQ toolkit | binary |
+| **duckdb** | in-process SQL over CSV/Parquet/JSON | binary |
 | **fzf** | fuzzy finder | binary |
 | **zoxide** | smarter `cd` | binary |
 | **atuin** | searchable shell history (`Ctrl-R`) | binary |

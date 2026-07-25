@@ -6,7 +6,7 @@ set +e
 
 # command names to probe (visidata -> vd, yazi ships ya too)
 tools=(bat eza fd rg sd dust duf procs btop delta hyperfine
-       jq yq mlr csvtk seqkit
+       jq yq mlr csvtk seqkit duckdb
        fzf zoxide atuin yazi ya broot
        starship direnv
        just chezmoi xh tldr
