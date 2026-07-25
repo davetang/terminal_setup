@@ -99,6 +99,7 @@ every tool is a prebuilt binary or a conda/pip package.
 | **xh** | ergonomic HTTP client (curl alt) | binary |
 | **tldr** (tealdeer) | example-first man pages | binary |
 | **lazygit** | git TUI (stage/commit/branch/rebase) | binary |
+| **trippy** (`trip`) | traceroute + ping, in a TUI | binary |
 | **gh** | GitHub CLI | binary |
 | **pandoc** | universal document converter | binary |
 | **viddy** | a modern `watch` | binary |

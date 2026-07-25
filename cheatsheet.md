@@ -101,6 +101,17 @@ csvtk pretty report.csv | bat       # aligned table, paged
 jq '.general' report.json           # pull one section out of the JSON
 ```
 
+## Network
+
+```sh
+sudo trip example.com       # traceroute + live ping stats in a TUI; q quits
+trip -m 30 1.1.1.1          # cap the max number of hops
+trip --udp example.com      # use UDP probes instead of the default ICMP
+```
+
+`trip` opens raw sockets, so run it with `sudo`, or grant the binary the
+capability once (needs root that single time): `sudo setcap cap_net_raw+ep ~/bin/trip`.
+
 ## LLM queries (llm)
 
 ```sh

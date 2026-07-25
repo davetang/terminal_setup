@@ -51,6 +51,10 @@ xh	ducaale/xh	xh-v[0-9.]+-x86_64-unknown-linux-(musl|gnu)\.tar\.gz$
 tldr	dbrgn/tealdeer	tealdeer-linux-x86_64-musl$
 lazygit	jesseduffield/lazygit	lazygit_[0-9.]+_[Ll]inux_x86_64\.tar\.gz$
 #
+# --- network ---
+# trippy installs the `trip` command. Its Rust musl build is static, so musl is safe.
+trippy	fujiapple852/trippy	trippy-[0-9.]+-x86_64-unknown-linux-(musl|gnu)\.tar\.gz$	trip
+#
 # --- from install_scripts (davetang) ---
 gh	cli/cli	gh_[0-9.]+_linux_amd64\.tar\.gz$
 pandoc	jgm/pandoc	pandoc-[0-9.]+-linux-amd64\.tar\.gz$
