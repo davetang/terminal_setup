@@ -98,6 +98,7 @@ every tool is a prebuilt binary or a conda/pip package.
 | **chezmoi** | dotfile manager | binary |
 | **xh** | ergonomic HTTP client (curl alt) | binary |
 | **tldr** (tealdeer) | example-first man pages | binary |
+| **lazygit** | git TUI (stage/commit/branch/rebase) | binary |
 | **gh** | GitHub CLI | binary |
 | **pandoc** | universal document converter | binary |
 | **viddy** | a modern `watch` | binary |

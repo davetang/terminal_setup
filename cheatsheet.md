@@ -31,6 +31,8 @@ btop                        # top/htop TUI; q to quit
 #   [interactive] diffFilter = delta --color-only
 #   [delta] dark = true   # or light; skips delta's terminal colour probe (see README)
 git diff                    # now syntax-highlighted, side-by-side with -s
+lazygit                     # full-screen git TUI for this repo; ? shows keys, q quits
+#   space stages · c commit · P push · p pull · b branches · digits switch panels
 hyperfine 'rg foo' 'grep -r foo .'   # benchmark & compare commands
 hyperfine --warmup 3 './build.sh'
 ```

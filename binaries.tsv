@@ -49,6 +49,7 @@ just	casey/just	just-[0-9.]+-x86_64-unknown-linux-musl\.tar\.gz$
 chezmoi	twpayne/chezmoi	chezmoi_[0-9.]+_linux_amd64\.tar\.gz$
 xh	ducaale/xh	xh-v[0-9.]+-x86_64-unknown-linux-(musl|gnu)\.tar\.gz$
 tldr	dbrgn/tealdeer	tealdeer-linux-x86_64-musl$
+lazygit	jesseduffield/lazygit	lazygit_[0-9.]+_[Ll]inux_x86_64\.tar\.gz$
 #
 # --- from install_scripts (davetang) ---
 gh	cli/cli	gh_[0-9.]+_linux_amd64\.tar\.gz$

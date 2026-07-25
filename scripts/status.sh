@@ -9,7 +9,7 @@ tools=(bat eza fd rg sd dust duf procs btop delta hyperfine
        jq yq mlr csvtk seqkit duckdb
        fzf zoxide atuin yazi ya broot
        starship direnv
-       just chezmoi xh tldr
+       just chezmoi xh tldr lazygit
        gh pandoc viddy ollama
        tmux zsh datamash parallel pv goaccess vd llm)
 
