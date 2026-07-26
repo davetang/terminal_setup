@@ -55,6 +55,11 @@ lazygit	jesseduffield/lazygit	lazygit_[0-9.]+_[Ll]inux_x86_64\.tar\.gz$
 # trippy installs the `trip` command. Its Rust musl build is static, so musl is safe.
 trippy	fujiapple852/trippy	trippy-[0-9.]+-x86_64-unknown-linux-(musl|gnu)\.tar\.gz$	trip
 #
+# --- typing practice ---
+# tt ships a raw (uncompressed) static Go binary called tt-linux; it lands in
+# ~/bin as `tt`. Anchor the regex so it can't match tt-linux_arm/_arm64.
+tt	lemnos/tt	tt-linux$
+#
 # --- from install_scripts (davetang) ---
 gh	cli/cli	gh_[0-9.]+_linux_amd64\.tar\.gz$
 pandoc	jgm/pandoc	pandoc-[0-9.]+-linux-amd64\.tar\.gz$

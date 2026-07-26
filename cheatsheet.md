@@ -112,6 +112,44 @@ trip --udp example.com      # use UDP probes instead of the default ICMP
 `trip` opens raw sockets, so run it with `sudo`, or grant the binary the
 capability once (needs root that single time): `sudo setcap cap_net_raw+ep ~/bin/trip`.
 
+## Typing practice (tt)
+
+```sh
+tt                                  # 50 words from the 1000 commonest; same as -n 50
+tt -t 60 -showwpm                   # 60-second test with a live WPM counter
+tt -n 10 -g 5                       # still 50 words, split into 5 groups of 10
+tt -quotes en                       # type real quotes rather than random words
+tt -words 200en                     # smaller list: the 200 commonest words
+tt -list words                      # what's built in (12 lists, en/de/fr/es/...)
+tt -list themes                     # 180 colour themes; use with -theme NAME
+```
+
+Everything above is embedded in the binary — no word list or theme files to
+fetch. During a test: `escape` restarts it, `right`/`left` move to the next and
+previous test, `ctrl-c` exits. Your own lists and themes can live in
+`~/.tt/words` and `~/.tt/themes`, where `-words`/`-theme` find them by name.
+
+Drill your weak spots by feeding `tt` your own text — any file, or stdin:
+
+```sh
+tt notes.md                         # type a real file, one paragraph at a time
+tt -start 0 notes.md                # reset saved progress on that file
+printf 'plaque quartz jinx vex\n' | tt   # ad-hoc drill from stdin
+tt -words ~/weak.txt -n 5 -g 10     # a list of words heavy in the keys you fumble
+```
+
+Two switches make practice noticeably harder, and are the ones worth reaching
+for once raw speed plateaus: `-nobackspace` (no correcting mistakes) and
+`-noskip` (space won't jump past a word you got wrong).
+
+Track progress over time with the machine-readable output:
+
+```sh
+tt -oneshot -t 60 -csv >> ~/typing.csv    # type,wpm,cpm,accuracy,timestamp
+tt -oneshot -t 60 -json | jq '.wpm'
+csvtk -H pretty ~/typing.csv              # read the log back
+```
+
 ## LLM queries (llm)
 
 ```sh
