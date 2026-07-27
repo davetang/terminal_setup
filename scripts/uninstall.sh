@@ -9,7 +9,7 @@ bins=(bat eza fd rg sd dust duf procs btop delta hyperfine
       fzf zoxide atuin yazi ya broot
       starship direnv
       just chezmoi xh tldr lazygit
-      gh pandoc viddy ollama trip tt)
+      gh pandoc viddy ollama trip tt ttyper)
 
 n=0
 for b in "${bins[@]}"; do

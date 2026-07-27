@@ -101,6 +101,7 @@ every tool is a prebuilt binary or a conda/pip package.
 | **lazygit** | git TUI (stage/commit/branch/rebase) | binary |
 | **trippy** (`trip`) | traceroute + ping, in a TUI | binary |
 | **tt** | typing speed test / practice drills | binary |
+| **ttyper** | typing test with per-key accuracy stats | binary |
 | **gh** | GitHub CLI | binary |
 | **pandoc** | universal document converter | binary |
 | **viddy** | a modern `watch` | binary |

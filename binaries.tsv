@@ -59,6 +59,9 @@ trippy	fujiapple852/trippy	trippy-[0-9.]+-x86_64-unknown-linux-(musl|gnu)\.tar\.
 # tt ships a raw (uncompressed) static Go binary called tt-linux; it lands in
 # ~/bin as `tt`. Anchor the regex so it can't match tt-linux_arm/_arm64.
 tt	lemnos/tt	tt-linux$
+# ttyper publishes musl assets only for aarch64/i686, so x86_64 has to take the
+# gnu build. It's safe: the binary needs nothing newer than GLIBC_2.18.
+ttyper	max-niederman/ttyper	ttyper-x86_64-unknown-linux-gnu\.tar\.gz$
 #
 # --- from install_scripts (davetang) ---
 gh	cli/cli	gh_[0-9.]+_linux_amd64\.tar\.gz$

@@ -112,7 +112,13 @@ trip --udp example.com      # use UDP probes instead of the default ICMP
 `trip` opens raw sockets, so run it with `sudo`, or grant the binary the
 capability once (needs root that single time): `sudo setcap cap_net_raw+ep ~/bin/trip`.
 
-## Typing practice (tt)
+## Typing practice (tt, ttyper)
+
+Two typing tests with different strengths: `tt` is the flexible one (any text,
+scriptable, logs results), `ttyper` is the one that tells you *which keys* you
+keep getting wrong. Use them together — see the loop at the end.
+
+### tt
 
 ```sh
 tt                                  # 50 words from the 1000 commonest; same as -n 50
@@ -149,6 +155,46 @@ tt -oneshot -t 60 -csv >> ~/typing.csv    # type,wpm,cpm,accuracy,timestamp
 tt -oneshot -t 60 -json | jq '.wpm'
 csvtk -H pretty ~/typing.csv              # read the log back
 ```
+
+### ttyper
+
+```sh
+ttyper                              # 50 words; the results screen is the point
+ttyper -w 100                       # longer test
+ttyper -l english1000               # bigger vocabulary than the default 200
+ttyper -l english-ngrams            # common letter pairs/triples, not real words
+ttyper -l rust                      # 12 of the 29 languages are programming ones
+ttyper --list-languages             # all 29
+ttyper notes.md                     # type a file; "-" reads stdin
+```
+
+The results screen is why it's here: an overview, a WPM-over-time chart, and a
+**worst keys** panel — the per-key breakdown `tt` won't give you. Two modes make
+it bite: `--no-backtrack` (can't return to a finished word) and `--sudden-death`
+(one mistake restarts the test).
+
+Languages are embedded in the binary, so `--list-languages` works with no
+`~/.config/ttyper` present. Add your own as a word-per-line file at
+`~/.config/ttyper/language/<name>`, or skip naming it with `--language-file
+<path>`. `~/.config/ttyper/config.toml` sets `default_language` (`english200`
+out of the box) and the colours.
+
+### The loop worth running
+
+```sh
+ttyper -w 200                             # read the worst-keys panel; say it's j/q/z
+rg -oIN '\w{3,}' ~/notes.md ~/*.R |        # mine words from prose or code you have
+  rg -i '[jqz]' | sort -u > ~/weak.txt     # ...keeping the ones with those keys
+                                           # -I matters: without it rg prefixes paths
+tt -words ~/weak.txt -n 5 -g 10 -nobackspace   # drill them, no correcting
+tt -oneshot -t 60 -csv >> ~/typing.csv         # log the retest and compare
+```
+
+`ttyper` diagnoses, `tt` drills the diagnosis, the CSV shows whether it worked.
+The one `weak.txt` feeds both — `ttyper --language-file ~/weak.txt` retests the
+same words with a fresh worst-keys panel. No system word list needed:
+`/usr/share/dict/words` isn't installed by default on Debian/Ubuntu, so mine
+your own text instead.
 
 ## LLM queries (llm)
 
