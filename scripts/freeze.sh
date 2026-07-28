@@ -39,7 +39,7 @@ else
 fi
 
 log "resolving conda-forge versions…"
-for p in tmux zsh datamash parallel pv goaccess; do
+for p in tmux zsh datamash parallel pv goaccess xclip; do
   v="$(curl -fsSL "https://api.anaconda.org/package/conda-forge/$p" \
         | python3 -c 'import sys,json; print(json.load(sys.stdin).get("latest_version",""))' 2>/dev/null)"
   if [[ -n "$v" ]]; then printf '%s\tconda\t%s\n' "$p" "$v" >> "$tmp"; ok "$p -> $v"

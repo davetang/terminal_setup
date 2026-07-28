@@ -112,6 +112,7 @@ every tool is a prebuilt binary or a conda/pip package.
 | **parallel** (GNU) | run jobs across cores | conda-forge |
 | **pv** | pipe progress / throughput | conda-forge |
 | **goaccess** | real-time web log analyzer (TUI/HTML) | conda-forge |
+| **xclip** | pipe to/from the X11 clipboard | conda-forge |
 | **visidata** (`vd`) | interactive TUI for tabular data | pipx / pip / conda |
 | **llm** | prompt LLMs from the shell, pipe text into them | pipx / pip / conda |
 
@@ -307,7 +308,7 @@ later, re-run `make setup` after it exists to wire your `~/.zshrc`.
 ## After installing
 
 `make setup` handles `PATH` and auto-initialises starship/zoxide/atuin/direnv/fzf.
-Four tools need one manual step:
+Five tools need one manual step:
 
 - **delta** does nothing until git is told to use it — add to `~/.gitconfig`:
 
@@ -342,6 +343,12 @@ Four tools need one manual step:
 - **llm** needs a model to talk to — either a key (`llm keys set openai`) or a
   plugin for something local (`llm install llm-ollama`, which reuses the same
   `OLLAMA_HOST`). See [llm](#llm).
+
+- **xclip** talks to an X server, so it needs `$DISPLAY` pointing at a live one.
+  It installs anywhere, but on a headless box or a plain `ssh` session it exits
+  with `Error: Can't open display: (null)`. Connect with `ssh -X` (or `-Y`) and
+  a local X server, and `echo $DISPLAY` should show something like
+  `localhost:10.0`. Nothing else in this setup depends on it.
 
 Everything else works the moment it's on `PATH`. Run `make check` to confirm.
 

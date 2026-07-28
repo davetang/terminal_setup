@@ -301,6 +301,30 @@ tmux attach -t 0            # reattach
 chsh -s "$(command -v zsh)" # make zsh your login shell (optional)
 ```
 
+## Clipboard (xclip)
+
+```sh
+# X has three selections; CLIPBOARD is the one Ctrl-V pastes from.
+# xclip defaults to PRIMARY (middle-click), so pass -selection clipboard.
+pwd | xclip -selection clipboard      # -sel c works, prefixes are matched
+xclip -sel c < results.tsv            # copy a file in
+xclip -sel c -o > pasted.txt          # paste back out
+xclip -sel c -o | wc -l               # ...or straight into a pipe
+
+# trailing newlines come along for the ride; drop it when pasting into a form
+git rev-parse HEAD | tr -d '\n' | xclip -sel c
+
+# pairs with the rest of the setup
+jq -r '.[].name' data.json | xclip -sel c
+xclip -sel c -o | csvtk pretty -t     # eyeball a table copied from a browser
+xclip -sel c -o | llm 'summarise this'
+
+# needs a live X server: $DISPLAY must be set (ssh -X), else
+#   Error: Can't open display: (null)
+# after a copy, xclip forks and stays running — that process *is* the
+# selection owner; kill it and the clipboard content goes with it.
+```
+
 ## Housekeeping
 
 ```sh
