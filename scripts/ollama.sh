@@ -86,7 +86,7 @@ tag="$(lock_get ollama gh)"
 if [[ -n "$tag" ]]; then log "installing ollama $tag  (github:$REPO, pinned, client only)"
 else log "installing ollama  (github:$REPO, latest, client only)"; fi
 
-url="$(gh_asset "$REPO" "$ASSET_RE" "$tag")" || true
+url="$(forge_asset "$REPO" "$ASSET_RE" "$tag")" || true
 [[ -n "${url:-}" ]] || die "ollama: no asset matched /$ASSET_RE/ in $REPO — the release naming may have changed, or you hit the GitHub API rate limit (60/hr). Set GITHUB_TOKEN to raise it, or wait and retry."
 
 find_zstd || die "ollama: no way to decompress zstd. Install zstd (apt/dnf install zstd), or 'pip install zstandard', then retry."

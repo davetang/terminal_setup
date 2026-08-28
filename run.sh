@@ -14,7 +14,7 @@ BINTOOLS=(bat eza fd rg sd dust duf procs btop delta hyperfine
           fzf zoxide atuin yazi broot
           starship direnv
           just chezmoi xh tldr lazygit
-          gh pandoc viddy trippy tt ttyper)
+          gh tea pandoc viddy trippy tt ttyper)
 CONDATOOLS=(tmux zsh datamash parallel pv goaccess xclip)
 PIPTOOLS=(visidata llm)
 

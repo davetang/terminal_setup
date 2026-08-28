@@ -3,6 +3,25 @@
 Quick, practical usage for the tools installed by this repo. Run `tldr <tool>`
 for more examples once installed.
 
+- [Coreutils replacements](#coreutils-replacements)
+- [git + benchmarking](#git--benchmarking)
+- [Data wrangling](#data-wrangling)
+- [Throughput & parallelism](#throughput--parallelism)
+- [GitHub, docs & watching](#github-docs--watching)
+- [Gitea (tea)](#gitea-tea)
+- [Web log analysis (goaccess)](#web-log-analysis-goaccess)
+- [Network](#network)
+- [Typing practice (tt, ttyper)](#typing-practice-tt-ttyper)
+- [LLM queries (llm)](#llm-queries-llm)
+- [LLM queries (ollama, client only)](#llm-queries-ollama-client-only)
+- [LLM queries (llm + ollama)](#llm-queries-llm--ollama)
+- [Navigation & finding](#navigation--finding)
+- [Prompt, env, HTTP, docs](#prompt-env-http-docs)
+- [Project tasks & dotfiles](#project-tasks--dotfiles)
+- [Shell & multiplexer](#shell--multiplexer)
+- [Clipboard (xclip)](#clipboard-xclip)
+- [Housekeeping](#housekeeping)
+
 ## Coreutils replacements
 
 ```sh
@@ -79,6 +98,47 @@ pandoc page.html -t gfm -o page.md  # HTML -> GitHub-flavoured Markdown
 viddy -n 2 kubectl get pods         # a modern `watch`: re-run every 2s
 viddy -d 'date; free -h'            # -d highlights what changed between runs
 ```
+
+## Gitea (tea)
+
+```sh
+tea logins add                      # interactive: name, URL, token (default gitea.com)
+tea logins add -n work -u https://git.example.org -t <token>   # or non-interactive
+tea logins list                     # every server tea knows; `default` picks one
+tea whoami
+
+# inside a clone, tea reads the git remote for owner/repo context
+tea issues                          # open issues; `tea issues 42` prints one in full
+tea issues create -t 'segfault on load' -d 'steps to reproduce...' -L bug
+tea pr                              # open pull requests
+tea pr checkout 42                  # fetch PR 42 into a local branch
+tea pr create -t 'fix parser' --head my-branch -b main
+tea pr merge 42
+tea releases create --tag v1.2.0 -t v1.2.0 -a ./dist/tool-linux-amd64
+tea open                            # this repo in a browser
+tea clone owner/repo
+```
+
+`tea` is `gh` for Gitea, and unlike `gh` it is multi-server: `-l <login>` picks
+which one a command talks to, `-r owner/repo` works outside a clone, and
+`-R <remote>` infers the login from a git remote. Log in once per server before
+anything else works; tokens are stored in plain text in
+`${XDG_CONFIG_HOME:-~/.config}/tea/config.yml`, so `chmod 600` it. Add
+`--git-credentials` to `logins add` to make `tea` a git credential helper too,
+and HTTPS `git push`/`git clone` stop asking for a password.
+
+```sh
+# -o feeds the rest of this setup: simple, table, csv, tsv, yaml, json
+tea issues ls -o csv | csvtk pretty                      # readable table
+tea issues ls -o tsv --state all | vd -f tsv             # explore in visidata
+tea issues ls -o json | jq -r '.[] | [.index,.title] | @tsv'
+tea pr ls -f index,title,ci -o table                     # pick your own columns
+tea api /repos/{owner}/{repo}/issues | jq '.[].title'    # anything with no subcommand
+```
+
+`tea api` is the escape hatch: it signs the request with the stored token and
+expands `{owner}`/`{repo}` from the current repo, so any endpoint the CLI does
+not wrap is still one line.
 
 ## Web log analysis (goaccess)
 

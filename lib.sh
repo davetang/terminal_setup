@@ -56,34 +56,46 @@ need() {
 # --- downloading -------------------------------------------------------------
 fetch() { curl -fL --retry 3 --connect-timeout 20 -o "$2" "$1"; }
 
-# _gh_api <path>: GET the GitHub API and print the JSON body.
-_gh_api() {
-  local path="$1"; local -a auth=()
-  [[ -n "${GITHUB_TOKEN:-}" ]] && auth=(-H "Authorization: Bearer $GITHUB_TOKEN")
-  curl -fsSL "${auth[@]}" "https://api.github.com/$path" \
-    || die "GitHub API failed for $path (rate-limited? export GITHUB_TOKEN)"
+# _forge_api <repo> <path>: GET a release API and print the JSON body. <repo>
+# is a binaries.tsv repo field, in either of its two forms:
+#   owner/repo       GitHub (the default)
+#   host/owner/repo  the Gitea-compatible forge at <host> — gitea.com,
+#                    codeberg.org, a self-hosted Gitea. Their API lives at
+#                    /api/v1/repos/... and returns the same JSON shape GitHub
+#                    does (tag_name, browser_download_url), so every caller
+#                    below works against either without knowing the difference.
+_forge_api() {
+  local repo="$1" path="$2" url; local -a auth=()
+  if [[ "$repo" == */*/* ]]; then
+    url="https://${repo%%/*}/api/v1/repos/${repo#*/}/$path"
+  else
+    url="https://api.github.com/repos/$repo/$path"
+    [[ -n "${GITHUB_TOKEN:-}" ]] && auth=(-H "Authorization: Bearer $GITHUB_TOKEN")
+  fi
+  curl -fsSL "${auth[@]}" "$url" \
+    || die "release API failed for $repo ($path) — rate-limited? for GitHub, export GITHUB_TOKEN"
 }
 
-# gh_asset <owner/repo> <regex> [<tag>]: print the browser_download_url of the
+# forge_asset <repo> <regex> [<tag>]: print the browser_download_url of the
 # asset whose URL matches <regex>, from release <tag> (or latest if empty).
 # When several assets match — typically a musl and a glibc build of the same
 # tool — prefer musl. A glibc build is linked against whatever libc its CI
 # runner had, which is often newer than ours, and then dies at startup with
 # "version `GLIBC_2.xx' not found". The musl builds are static and always run.
-gh_asset() {
-  local repo="$1" re="$2" tag="${3:-}" ep urls
-  if [[ -n "$tag" ]]; then ep="repos/$repo/releases/tags/$tag"
-  else ep="repos/$repo/releases/latest"; fi
-  urls="$(_gh_api "$ep" \
+forge_asset() {
+  local repo="$1" re="$2" tag="${3:-}" path urls
+  if [[ -n "$tag" ]]; then path="releases/tags/$tag"
+  else path="releases/latest"; fi
+  urls="$(_forge_api "$repo" "$path" \
     | grep -oE '"browser_download_url":[[:space:]]*"[^"]+"' \
     | sed -E 's/.*"(https[^"]+)".*/\1/' \
     | grep -E "$re")" || return 0
   { grep -E 'musl' <<<"$urls" || true; printf '%s\n' "$urls"; } | head -1
 }
 
-# gh_latest_tag <owner/repo>: print the tag_name of the latest release.
-gh_latest_tag() {
-  _gh_api "repos/$1/releases/latest" \
+# forge_latest_tag <repo>: print the tag_name of the latest release.
+forge_latest_tag() {
+  _forge_api "$1" "releases/latest" \
     | grep -oE '"tag_name":[[:space:]]*"[^"]+"' | head -1 \
     | sed -E 's/.*"([^"]+)".*/\1/'
 }
@@ -141,11 +153,15 @@ install_binary() {
   local first="${bins%% *}"
 
   need "$first" || return 0
+  # Label the source the way the repo field reads: "github:owner/repo", or
+  # "gitea.com:owner/repo" for a host-qualified (non-GitHub) forge.
+  local src="github:$repo"
+  [[ "$repo" == */*/* ]] && src="${repo%%/*}:${repo#*/}"
   local tag; tag="$(lock_get "$name" gh)"
-  if [[ -n "$tag" ]]; then log "installing $name $tag  (github:$repo, pinned)"
-  else log "installing $name  (github:$repo, latest)"; fi
+  if [[ -n "$tag" ]]; then log "installing $name $tag  ($src, pinned)"
+  else log "installing $name  ($src, latest)"; fi
 
-  local url; url="$(gh_asset "$repo" "$re" "$tag")" || true
+  local url; url="$(forge_asset "$repo" "$re" "$tag")" || true
   [[ -n "${url:-}" ]] || die "$name: no asset matched /$re/ in $repo — the release naming may have changed, or you hit the GitHub API rate limit (60/hr). Set GITHUB_TOKEN to raise it, or wait and retry."
 
   local file="$TMP/${url##*/}"

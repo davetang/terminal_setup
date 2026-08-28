@@ -1,7 +1,9 @@
 # binaries.tsv — tools installed as prebuilt binaries into ~/bin.
 # Columns (TAB-separated):  name <TAB> owner/repo <TAB> asset-regex <TAB> [bins]
 #   name        make target + default binary name
-#   owner/repo  GitHub repo whose *latest* release is queried
+#   owner/repo  GitHub repo whose *latest* release is queried. A three-part
+#               host/owner/repo (e.g. gitea.com/gitea/tea) queries that Gitea
+#               host's API instead — same JSON, same regex matching.
 #   asset-regex extended regex matched against each asset's download URL
 #   bins        space-separated binaries to pull out (defaults to <name>)
 # Built for x86_64 Linux. Edit a regex here to change arch or pin behaviour.
@@ -62,6 +64,15 @@ tt	lemnos/tt	tt-linux$
 # ttyper publishes musl assets only for aarch64/i686, so x86_64 has to take the
 # gnu build. It's safe: the binary needs nothing newer than GLIBC_2.18.
 ttyper	max-niederman/ttyper	ttyper-x86_64-unknown-linux-gnu\.tar\.gz$
+#
+# --- git forges ---
+# tea is the Gitea CLI, and Gitea does not develop it on GitHub: go-gitea/tea is
+# an archived mirror that publishes no releases, so this row uses the
+# host/owner/repo form above to query gitea.com's own API. Upstream's advice is
+# the prebuilt binary; the linux-amd64 asset is a static Go binary (29 MB), and
+# the $ anchor keeps the regex off its .xz and .xz.sha256 siblings, which this
+# framework has no unpacker for (plain .xz is not a tarball).
+tea	gitea.com/gitea/tea	tea-[0-9.]+-linux-amd64$
 #
 # --- from install_scripts (davetang) ---
 gh	cli/cli	gh_[0-9.]+_linux_amd64\.tar\.gz$
