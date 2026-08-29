@@ -65,7 +65,8 @@ every tool is a prebuilt binary or a conda/pip package.
 > GitHub's API allows 60 unauthenticated requests/hour, and a full install makes
 > ~30 (one per binary tool, except `tea`, which asks gitea.com). If you hit the
 > limit, `export GITHUB_TOKEN=...` (any classic token, no scopes needed) to
-> raise it, then rerun.
+> raise it, then rerun. If `gh` is already set up on this host,
+> `export GITHUB_TOKEN=$(gh auth token)` reuses that login.
 
 ## What gets installed
 
@@ -103,7 +104,7 @@ every tool is a prebuilt binary or a conda/pip package.
 | **trippy** (`trip`) | traceroute + ping, in a TUI | binary |
 | **tt** | typing speed test / practice drills | binary |
 | **ttyper** | typing test with per-key accuracy stats | binary |
-| **gh** | GitHub CLI | binary |
+| **gh** | GitHub CLI: issues, PRs, releases, Actions | binary |
 | **tea** | Gitea CLI: issues, PRs, releases | binary |
 | **pandoc** | universal document converter | binary |
 | **viddy** | a modern `watch` | binary |

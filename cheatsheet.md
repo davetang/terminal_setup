@@ -7,7 +7,8 @@ for more examples once installed.
 - [git + benchmarking](#git--benchmarking)
 - [Data wrangling](#data-wrangling)
 - [Throughput & parallelism](#throughput--parallelism)
-- [GitHub, docs & watching](#github-docs--watching)
+- [Docs & watching](#docs--watching)
+- [GitHub (gh)](#github-gh)
 - [Gitea (tea)](#gitea-tea)
 - [Web log analysis (goaccess)](#web-log-analysis-goaccess)
 - [Network](#network)
@@ -86,18 +87,74 @@ parallel 'echo {} ; grep -c foo {}' ::: *.txt
 find . -name '*.bam' | parallel samtools index   # feed a pipeline into parallel
 ```
 
-## GitHub, docs & watching
+## Docs & watching
 
 ```sh
-gh auth login                       # authenticate the GitHub CLI once
-gh repo clone owner/name
-gh pr create --fill                 # open a PR from the current branch
-gh pr checks                        # CI status for the current PR
 pandoc README.md -o readme.pdf      # convert Markdown -> PDF
 pandoc page.html -t gfm -o page.md  # HTML -> GitHub-flavoured Markdown
 viddy -n 2 kubectl get pods         # a modern `watch`: re-run every 2s
 viddy -d 'date; free -h'            # -d highlights what changed between runs
 ```
+
+## GitHub (gh)
+
+```sh
+gh auth login                       # interactive: host, protocol, then browser or token
+gh auth login --with-token < tok    # non-interactive
+gh auth status                      # the active account on each known host
+gh auth setup-git                   # make gh a git credential helper for HTTPS push/clone
+gh config set editor vi             # gh opens $EDITOR for issue/PR bodies (gh issue create -e)
+
+# inside a clone, gh reads the git remote for owner/repo context
+gh issue list                       # open issues; `gh issue view 42` prints one in full
+gh issue create -t 'segfault on load' -b 'steps to reproduce...' -l bug
+gh pr list                          # open pull requests
+gh pr checkout 42                   # fetch PR 42 into a local branch (aliased: gh co 42)
+gh pr create --fill                 # open a PR, title/body taken from the commits
+gh pr checks                        # CI status for the current PR
+gh pr merge 42 --squash
+gh release create v1.2.0 ./dist/tool-linux-amd64    # assets are positional after the tag
+gh browse                           # this repo in a browser; `gh browse 42` an issue or PR
+gh repo clone owner/name
+gh run list                         # recent Actions runs
+gh run watch                        # follow a run live, exits when it finishes
+gh run view --log-failed            # only the failing steps' logs
+```
+
+`gh` and [`tea`](#gitea-tea) are the two forge CLIs this setup installs, and they
+divide the same job differently. `tea` is multi-server, picking one per command
+with `-l <login>`; `gh` keeps one *active* account per host and you move between
+them with `gh auth switch`, so the target comes from context rather than a flag.
+Outside a clone, `-R [HOST/]OWNER/REPO` names the repo (tea's `-r`), and `GH_REPO`
+sets it for a whole shell. Where no system keyring is available — the usual case
+on a headless box — the token is written in plain text to
+`${XDG_CONFIG_HOME:-~/.config}/gh/hosts.yml`, so `chmod 600` it, the same care
+`tea`'s `config.yml` needs.
+
+`gh` also reads `GITHUB_TOKEN` (and `GH_TOKEN`, which takes precedence) instead of
+a stored login — the same variable this repo's installer wants for the GitHub API
+rate limit, so one login can serve both:
+
+```sh
+export GITHUB_TOKEN=$(gh auth token)   # let `make install` reuse gh's credentials
+```
+
+```sh
+# --json feeds the rest of this setup; --json with no fields lists what's available
+gh issue list --json number,title,state
+gh issue list --json number,title --jq '.[] | [.number,.title] | @tsv' | csvtk pretty -t -H
+gh pr list --json number,title,state --jq '.[] | [.number,.title,.state] | @tsv' | vd -f tsv
+gh pr list --json number,title -t '{{range .}}{{tablerow .number .title}}{{end}}'
+gh api repos/{owner}/{repo}/issues | jq '.[].title'   # anything with no subcommand
+gh api --paginate /user/repos --jq '.[].full_name'    # every page, one name per line
+```
+
+`gh api` is the escape hatch, and it works like `tea api`: it signs the request
+with the stored token and expands `{owner}`, `{repo}` and `{branch}` from the
+current repo. The built-in `--jq` (short `-q`) is jq syntax evaluated in-process,
+so it works on a host without `jq` — this setup installs `jq` anyway, and a real
+`| jq` pipe is easier to iterate on, but `--jq` is what keeps `--paginate`
+streaming page by page.
 
 ## Gitea (tea)
 

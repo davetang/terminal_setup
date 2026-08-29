@@ -66,6 +66,11 @@ tt	lemnos/tt	tt-linux$
 ttyper	max-niederman/ttyper	ttyper-x86_64-unknown-linux-gnu\.tar\.gz$
 #
 # --- git forges ---
+# gh is the GitHub CLI. Upstream ships a static Go binary inside a tarball that
+# unpacks to gh_<ver>_linux_amd64/bin/gh — a nested layout _find_bin resolves by
+# the amd64 in the path. The $ anchor keeps the regex off the .deb and .rpm
+# siblings of the same name, which this framework has no unpacker for.
+gh	cli/cli	gh_[0-9.]+_linux_amd64\.tar\.gz$
 # tea is the Gitea CLI, and Gitea does not develop it on GitHub: go-gitea/tea is
 # an archived mirror that publishes no releases, so this row uses the
 # host/owner/repo form above to query gitea.com's own API. Upstream's advice is
@@ -75,6 +80,5 @@ ttyper	max-niederman/ttyper	ttyper-x86_64-unknown-linux-gnu\.tar\.gz$
 tea	gitea.com/gitea/tea	tea-[0-9.]+-linux-amd64$
 #
 # --- from install_scripts (davetang) ---
-gh	cli/cli	gh_[0-9.]+_linux_amd64\.tar\.gz$
 pandoc	jgm/pandoc	pandoc-[0-9.]+-linux-amd64\.tar\.gz$
 viddy	sachaos/viddy	viddy-v[0-9.]+-linux-x86_64\.tar\.gz$
