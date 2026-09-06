@@ -49,5 +49,6 @@ parallel	conda	20260722
 pv	conda	1.6.6
 goaccess	conda	1.10.2
 xclip	conda	0.13
+ncdu	conda	2.9.2
 visidata	pip	3.4
 llm	pip	0.33

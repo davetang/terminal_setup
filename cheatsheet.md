@@ -21,6 +21,7 @@ for more examples once installed.
 - [Project tasks & dotfiles](#project-tasks--dotfiles)
 - [Shell & multiplexer](#shell--multiplexer)
 - [Clipboard (xclip)](#clipboard-xclip)
+- [Disk usage (ncdu)](#disk-usage-ncdu)
 - [Housekeeping](#housekeeping)
 
 ## Coreutils replacements
@@ -440,6 +441,38 @@ xclip -sel c -o | llm 'summarise this'
 #   Error: Can't open display: (null)
 # after a copy, xclip forks and stays running — that process *is* the
 # selection owner; kill it and the clipboard content goes with it.
+```
+
+## Disk usage (ncdu)
+
+```sh
+ncdu                        # scan the current directory, then browse it
+ncdu -x /                   # a whole filesystem, without crossing mount points
+ncdu --color dark ~         # colours are off by default (dark-bg for light terminals)
+ncdu --exclude .git repo/   # still listed, just not counted towards the totals
+
+# in the browser
+#   j/k or arrows move · l/Enter descend · h/left go up · i info on the item
+#   s size sort · n name sort · C item-count sort · t dirs before files
+#   a apparent size vs disk usage · g cycle percent/graph · e show hidden
+#   r recalculate this dir · d delete (asks first) · b shell here · q quit
+
+# scan once, browse as often as you like — worth it over NFS or on spinning disks
+ncdu -1xo scan.json /data   # -1: progress only, no full-screen UI (-0 from cron)
+ncdu -f scan.json           # browse that scan; delete/refresh/shell are disabled
+ncdu -r /srv/data           # read-only: no delete (-rr also drops the shell)
+
+# -e records mtime as well, so M sorts by it and m shows the column
+ncdu -e ~/projects
+
+# the export is JSON, so the rest of this setup can read it
+# every file and dir is an object with name/asize/dsize; a directory's own dsize
+# is just its inode, not the recursive total the browser shows
+ncdu -o - ~/data | jq -r '..|objects|select(.dsize)|[.dsize,.name]|@tsv' \
+  | sort -k1,1nr | head
+
+# dust prints a tree and exits; ncdu keeps the scan in memory so you can walk
+# into it, recalculate, and delete what you find without leaving the tool.
 ```
 
 ## Housekeeping

@@ -12,7 +12,7 @@ BINTOOLS := bat eza fd rg sd dust duf procs btop delta hyperfine \
             gh tea pandoc viddy trippy tt ttyper
 
 # Tools with no clean static binary — installed from conda-forge.
-CONDATOOLS := tmux zsh datamash parallel pv goaccess xclip
+CONDATOOLS := tmux zsh datamash parallel pv goaccess xclip ncdu
 
 # Pure-Python tools — installed with pipx/pip (conda-forge as a fallback).
 PIPTOOLS := visidata llm
@@ -48,7 +48,7 @@ binaries: $(BINTOOLS) ## Install every ~/bin release-binary tool
 $(BINTOOLS):
 	@$(ROOT)scripts/binary.sh $@
 
-conda-tools: $(CONDATOOLS) ## Install conda-forge tools (tmux, zsh, datamash, parallel, pv, goaccess, xclip)
+conda-tools: $(CONDATOOLS) ## Install conda-forge tools (tmux, zsh, datamash, parallel, pv, goaccess, xclip, ncdu)
 
 $(CONDATOOLS): miniforge
 	@$(ROOT)scripts/$@.sh

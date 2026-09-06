@@ -116,6 +116,7 @@ every tool is a prebuilt binary or a conda/pip package.
 | **pv** | pipe progress / throughput | conda-forge |
 | **goaccess** | real-time web log analyzer (TUI/HTML) | conda-forge |
 | **xclip** | pipe to/from the X11 clipboard | conda-forge |
+| **ncdu** | interactive disk usage browser (walk it, delete in place) | conda-forge |
 | **visidata** (`vd`) | interactive TUI for tabular data | pipx / pip / conda |
 | **llm** | prompt LLMs from the shell, pipe text into them | pipx / pip / conda |
 
@@ -124,8 +125,10 @@ for all but `tea`, which Gitea develops on gitea.com (see
 [Tools not on GitHub](#tools-not-on-github)) — pinned to the versions in
 `versions.lock` (see [Reproducibility](#reproducibility-version-pinning)).
 `ollama` is the odd one out — see [ollama, client only](#ollama-client-only).
-`tmux`, `zsh`, `datamash`, `parallel`, `pv`, and `goaccess` have no clean static
-binary upstream, so they come from conda-forge — if no `conda` is found, `make install`
+`tmux`, `zsh`, `datamash`, `parallel`, `pv`, `goaccess`, `xclip`, and `ncdu` have
+no static binary this setup can fetch (see [Tools not on
+GitHub](#tools-not-on-github) for `ncdu`), so they come from conda-forge — if no
+`conda` is found, `make install`
 bootstraps Miniforge under `~/miniforge3` automatically. `visidata` and `llm`
 are pure Python (`pipx` → `pip --user` → conda fallback).
 
@@ -225,7 +228,7 @@ deps.sh                        read-only preflight
 scripts/binary.sh              install one binary tool from binaries.tsv
 scripts/freeze.sh              resolve current versions → versions.lock
 scripts/miniforge.sh           bootstrap Miniforge (no-root)
-scripts/{tmux,zsh,datamash,parallel,pv,goaccess}.sh   conda-forge installs
+scripts/{tmux,zsh,…,xclip,ncdu}.sh    conda-forge installs (one per CONDATOOLS entry)
 scripts/{visidata,llm}.sh      pipx / pip / conda installs
 scripts/ollama.sh              stream the ollama CLI out of upstream's bundle
 scripts/setup_shell.sh         wire the shell rc
@@ -264,6 +267,13 @@ tea<TAB>gitea.com/gitea/tea<TAB>tea-[0-9.]+-linux-amd64$
 Two slashes means GitHub, three means that host's Gitea API. The same row shape
 works for any Gitea or Forgejo host, codeberg.org included. Only GitHub gets the
 `GITHUB_TOKEN` header, and only GitHub imposes the 60/hour limit.
+
+`ncdu` is the case that host prefix can't rescue. Its source is on a Gitea
+instance too (**code.blicky.net**), but that instance publishes **no releases**:
+the API answers `[]`, and the static `linux-x86_64` tarball is posted on the
+author's own site (`dev.yorhel.nl`), which serves plain files with no release
+API to query. A `binaries.tsv` row would have nothing to match, so `ncdu` comes
+from conda-forge — the same escape hatch as `tmux` and `goaccess`.
 
 ## Reproducibility (version pinning)
 
