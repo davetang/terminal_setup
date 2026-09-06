@@ -32,7 +32,8 @@ FORCE=1 make bat      # overwrite an existing copy
 make check            # report what is / isn't installed
 ```
 
-Usage examples for every tool live in [`cheatsheet.md`](cheatsheet.md).
+Usage examples for every tool live in [`cheatsheet.md`](cheatsheet.md), and in
+[`tldr/`](tldr/) as tealdeer custom pages you can drop in for `tldr <tool>`.
 
 ## Commands
 
