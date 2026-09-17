@@ -5,6 +5,7 @@ for more examples once installed.
 
 - [Coreutils replacements](#coreutils-replacements)
 - [git + benchmarking](#git--benchmarking)
+- [Linting & formatting (shellcheck, shfmt, ruff)](#linting--formatting-shellcheck-shfmt-ruff)
 - [Data wrangling](#data-wrangling)
 - [Throughput & parallelism](#throughput--parallelism)
 - [Docs & watching](#docs--watching)
@@ -56,6 +57,26 @@ lazygit                     # full-screen git TUI for this repo; ? shows keys, q
 #   space stages · c commit · P push · p pull · b branches · digits switch panels
 hyperfine 'rg foo' 'grep -r foo .'   # benchmark & compare commands
 hyperfine --warmup 3 './build.sh'
+```
+
+## Linting & formatting (shellcheck, shfmt, ruff)
+
+```sh
+shellcheck script.sh        # lint one script; non-zero exit if anything is flagged
+fd -e sh -x shellcheck      # lint every shell script in the tree
+shellcheck -x script.sh     # follow `source`d files instead of skipping them
+shellcheck -S warning *.sh  # floor the severity: error > warning > info > style
+# every finding carries an SC code; shellcheck.net/wiki/SC2086 explains each one
+shellcheck -f json script.sh | jq -r '.[] | [.line,.code,.message] | @tsv'
+shfmt -d script.sh          # diff what formatting would change (exit 1 if any)
+shfmt -w script.sh          # rewrite in place
+shfmt -l .                  # list only the files needing a format (CI-friendly)
+shfmt -i 2 -ci -w *.sh      # 2-space indent, indent switch cases
+ruff check .                # lint Python
+ruff check --fix .          # apply the fixes ruff considers safe
+ruff format .               # format (black-compatible)
+ruff check --select I --fix .   # sort imports (the isort rules)
+ruff check --statistics .   # findings counted by rule — tells you what to fix first
 ```
 
 ## Data wrangling

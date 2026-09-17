@@ -53,6 +53,17 @@ xh	ducaale/xh	xh-v[0-9.]+-x86_64-unknown-linux-(musl|gnu)\.tar\.gz$
 tldr	dbrgn/tealdeer	tealdeer-linux-x86_64-musl$
 lazygit	jesseduffield/lazygit	lazygit_[0-9.]+_[Ll]inux_x86_64\.tar\.gz$
 #
+# --- lint / format ---
+# shellcheck publishes a .tar.xz beside every .tar.gz, so match .tar.gz only:
+# both would match and the winner would depend on the order the API lists them.
+shellcheck	koalaman/shellcheck	shellcheck-v[0-9.]+\.linux\.x86_64\.tar\.gz$
+# shfmt ships a bare (uncompressed) binary named for its version and platform;
+# _extract falls through on it and install_binary drops it into ~/bin as `shfmt`.
+shfmt	mvdan/sh	shfmt_v[0-9.]+_linux_amd64$
+# ruff's release tags carry no leading 'v'. Its musl build is genuinely static
+# (unlike duckdb's above), so the musl preference is safe here.
+ruff	astral-sh/ruff	ruff-x86_64-unknown-linux-(musl|gnu)\.tar\.gz$
+#
 # --- network ---
 # trippy installs the `trip` command. Its Rust musl build is static, so musl is safe.
 trippy	fujiapple852/trippy	trippy-[0-9.]+-x86_64-unknown-linux-(musl|gnu)\.tar\.gz$	trip

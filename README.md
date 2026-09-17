@@ -68,7 +68,7 @@ compiler everything else is already installed when that step fails. `make deps`
 reports whether you have them.
 
 > GitHub's API allows 60 unauthenticated requests/hour, and a full install makes
-> ~30 (one per binary tool, except `tea`, which asks gitea.com). If you hit the
+> ~40 (one per binary tool, except `tea`, which asks gitea.com). If you hit the
 > limit, `export GITHUB_TOKEN=...` (any classic token, no scopes needed) to
 > raise it, then rerun. If `gh` is already set up on this host,
 > `export GITHUB_TOKEN=$(gh auth token)` reuses that login.
@@ -106,6 +106,9 @@ reports whether you have them.
 | **xh** | ergonomic HTTP client (curl alt) | binary |
 | **tldr** (tealdeer) | example-first man pages | binary |
 | **lazygit** | git TUI (stage/commit/branch/rebase) | binary |
+| **shellcheck** | lint shell scripts (quoting, globbing, `[ ]` traps) | binary |
+| **shfmt** | format shell scripts (`gofmt` for sh/bash) | binary |
+| **ruff** | Python linter + formatter, very fast | binary |
 | **trippy** (`trip`) | traceroute + ping, in a TUI | binary |
 | **tt** | typing speed test / practice drills | binary |
 | **ttyper** | typing test with per-key accuracy stats | binary |
@@ -355,7 +358,7 @@ screen      gnu            5.0.2
 - **Commit `versions.lock`** to reproduce the exact same tool set on another
   machine or later in time.
 
-Because a full install (or freeze) makes ~30 GitHub API calls and the
+Because a full install (or freeze) makes ~40 GitHub API calls and the
 unauthenticated limit is 60/hour, `export GITHUB_TOKEN=...` if you hit it.
 
 **Adding a tool** is one line in `binaries.tsv`:
