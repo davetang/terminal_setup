@@ -18,7 +18,7 @@ CONDATOOLS := tmux zsh datamash parallel pv goaccess xclip ncdu
 PIPTOOLS := visidata llm
 
 .PHONY: help deps check install setup uninstall miniforge freeze \
-        binaries conda-tools pip-tools ollama \
+        binaries conda-tools pip-tools ollama screen \
         $(BINTOOLS) $(CONDATOOLS) $(PIPTOOLS)
 
 help: ## Show this help
@@ -39,7 +39,7 @@ check: ## Report install status of every tool
 freeze: ## Pin every tool to its current version -> versions.lock
 	@$(ROOT)scripts/freeze.sh
 
-install: deps binaries conda-tools pip-tools ollama ## Install the whole curated set
+install: deps binaries conda-tools pip-tools ollama screen ## Install the whole curated set
 	@echo
 	@echo "Done. Next: 'make setup' to wire your shell, then restart it."
 
@@ -60,6 +60,9 @@ $(PIPTOOLS):
 
 ollama: ## Install the ollama CLI, client only (queries a server, can't serve)
 	@$(ROOT)scripts/ollama.sh
+
+screen: ## Build GNU Screen 5 from source (24-bit colour; needs gcc + make)
+	@$(ROOT)scripts/screen.sh
 
 miniforge: ## Bootstrap Miniforge under ~/miniforge3 if no conda is present
 	@$(ROOT)scripts/miniforge.sh

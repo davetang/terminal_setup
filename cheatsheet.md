@@ -416,6 +416,10 @@ chezmoi apply               # sync changes to $HOME
 tmux                        # new session; prefix Ctrl-b then " or % to split
 tmux ls                     # list sessions
 tmux attach -t 0            # reattach
+screen -d -R -S work        # GNU Screen 5: attach to "work", creating it if needed
+screen -ls                  # list sessions; inside one, Ctrl-a d detaches
+screen -S work -X quit      # end a session from outside it
+echo 'truecolor on' >> ~/.screenrc   # 24-bit colour, in sessions started after this
 chsh -s "$(command -v zsh)" # make zsh your login shell (optional)
 ```
 

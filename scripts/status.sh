@@ -11,7 +11,8 @@ tools=(bat eza fd rg sd dust duf procs btop delta hyperfine
        starship direnv
        just chezmoi xh tldr lazygit
        gh tea pandoc viddy ollama trip tt ttyper
-       tmux zsh datamash parallel pv goaccess xclip ncdu vd llm)
+       tmux zsh datamash parallel pv goaccess xclip ncdu vd llm
+       screen)
 
 printf '%-12s %-8s %s\n' TOOL STATUS LOCATION
 printf '%-12s %-8s %s\n' ---- ------ --------

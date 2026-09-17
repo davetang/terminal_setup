@@ -42,7 +42,7 @@ Every target works with either `make <target>` or `./run.sh <target>`:
 | Target | Does |
 |--------|------|
 | `deps` | read-only preflight (checks prerequisites) |
-| `install` | `deps` + everything: binaries, conda tools, pip tools, ollama |
+| `install` | `deps` + everything: binaries, conda tools, pip tools, ollama, screen |
 | `binaries` / `conda-tools` / `pip-tools` | install just one group |
 | `<tool>` | install a single tool (e.g. `make fzf`); prefix `FORCE=1` to reinstall |
 | `freeze` | pin every tool's current version → `versions.lock` |
@@ -60,8 +60,12 @@ Required (all present on a stock Debian/Ubuntu): `curl`, `tar`, `gzip`,
 Any `python3` will do; `llm` alone wants ≥ 3.10 and falls back to conda-forge
 below that.
 
-`make` is optional (use `./run.sh` instead). A C compiler is **not** needed —
-every tool is a prebuilt binary or a conda/pip package.
+`make` is optional (use `./run.sh` instead), and a C compiler is not needed,
+with one exception: **screen** is built from source, so it needs both `make` and
+a C compiler (`gcc` or `cc`). Every other tool is a prebuilt binary or a
+conda/pip package, and screen is the last install step, so on a host without a
+compiler everything else is already installed when that step fails. `make deps`
+reports whether you have them.
 
 > GitHub's API allows 60 unauthenticated requests/hour, and a full install makes
 > ~30 (one per binary tool, except `tea`, which asks gitea.com). If you hit the
@@ -120,6 +124,7 @@ every tool is a prebuilt binary or a conda/pip package.
 | **ncdu** | interactive disk usage browser (walk it, delete in place) | conda-forge |
 | **visidata** (`vd`) | interactive TUI for tabular data | pipx / pip / conda |
 | **llm** | prompt LLMs from the shell, pipe text into them | pipx / pip / conda |
+| **screen** (GNU) | terminal multiplexer; 5.x, for 24-bit colour | source (gcc + make) |
 
 Binaries download straight from their upstream release page into `~/bin` — GitHub
 for all but `tea`, which Gitea develops on gitea.com (see
@@ -131,7 +136,8 @@ no static binary this setup can fetch (see [Tools not on
 GitHub](#tools-not-on-github) for `ncdu`), so they come from conda-forge — if no
 `conda` is found, `make install`
 bootstraps Miniforge under `~/miniforge3` automatically. `visidata` and `llm`
-are pure Python (`pipx` → `pip --user` → conda fallback).
+are pure Python (`pipx` → `pip --user` → conda fallback). `screen` is the one
+source build — see [GNU Screen 5, built from source](#gnu-screen-5-built-from-source).
 
 ## ollama, client only
 
@@ -218,6 +224,49 @@ machine — list them in `TS_LLM_PLUGINS`. This works on an existing `llm` too:
 TS_LLM_PLUGINS='llm-ollama llm-anthropic' make llm
 ```
 
+## GNU Screen 5, built from source
+
+`screen` is here for one feature: **24-bit colour**. The `truecolor on` command
+arrived in Screen 5.0; the 4.x that distros ship, and 4.8.0, the newest on
+conda-forge, round 24-bit colours down to the 256-colour palette, so Neovim with
+`termguicolors` looks wrong inside them. GNU publishes Screen only as source
+tarballs, so `scripts/screen.sh` compiles it, which makes it the one tool here
+that needs a C compiler and `make`.
+
+```sh
+make screen                          # or: ./run.sh screen (also run by make install)
+FORCE=1 make screen                  # rebuild
+echo 'truecolor on' >> ~/.screenrc   # then start a new session
+```
+
+`~/.screenrc` is read when a session starts, so reattaching to an old session
+won't pick up `truecolor on`; start a fresh one.
+
+The build fetches `screen-<version>.tar.gz` from ftp.gnu.org (pinned in
+`versions.lock` under the `gnu` channel), installs it into
+`~/bin/screen-<version>/`, and points `~/bin/screen` at it. It gets a directory
+of its own because Screen compiles in the path to its encoding tables. A
+`screen` already on `PATH` only counts as installed if it is 5.0 or newer:
+shadowing the distro's 4.x is the point.
+
+**Why it links against Miniforge.** Screen's `configure` has to *link* a termcap
+library (for `tgetent`) and `libcrypt`. No curses headers are involved, but
+`-ltinfo` only finds a file named `libtinfo.so`, and hosts without root rarely
+have one. The system carries the runtime `libtinfo.so.6`; the unversioned name
+comes with the `-dev` package. Without it, configure stops at
+`unable to find tgetent() function`. So the script links against `ncurses` and
+`libxcrypt` in the Miniforge base env, installing them there if they are
+missing, and bakes in an rpath to its `lib/` so the binary finds them at run
+time. It locates that env through `conda` itself, not `$CONDA_PREFIX`, which is
+empty whenever the base env isn't active in the shell running the build.
+
+Two consequences:
+
+- **Keep Miniforge.** This `screen` loads its libraries from `~/miniforge3/lib`.
+- **A conda-forge `screen` would shadow it.** `shell/init.sh` puts
+  `~/miniforge3/bin` ahead of `~/bin`, so a `screen` 4.8.0 installed there wins.
+  The build warns if it finds one; `conda remove screen` clears it.
+
 ## How it works
 
 ```
@@ -232,6 +281,7 @@ scripts/miniforge.sh           bootstrap Miniforge (no-root)
 scripts/{tmux,zsh,…,xclip,ncdu}.sh    conda-forge installs (one per CONDATOOLS entry)
 scripts/{visidata,llm}.sh      pipx / pip / conda installs
 scripts/ollama.sh              stream the ollama CLI out of upstream's bundle
+scripts/screen.sh              build GNU Screen 5 from source, linked against Miniforge
 scripts/setup_shell.sh         wire the shell rc
 scripts/status.sh              back the check target
 scripts/uninstall.sh           remove installed ~/bin binaries
@@ -287,11 +337,13 @@ delta       gh             0.19.2
 tmux        conda          3.7b_
 visidata    pip            3.4
 llm         pip            0.31.1
+screen      gnu            5.0.2
 ```
 
 - **Forge tools** (GitHub or Gitea) install from `releases/tags/<tag>` (the
   exact tag), not `latest`; the `gh` channel in the lockfile means "a release
   tag", not necessarily github.com. **conda/pip tools** install `pkg=version`.
+  **screen** builds that version's source tarball from ftp.gnu.org (`gnu`).
 - **Refresh the pins** to current upstream at any time:
 
   ```sh
@@ -347,7 +399,7 @@ later, re-run `make setup` after it exists to wire your `~/.zshrc`.
 ## After installing
 
 `make setup` handles `PATH` and auto-initialises starship/zoxide/atuin/direnv/fzf.
-Five tools need one manual step:
+Six tools need one manual step:
 
 - **delta** does nothing until git is told to use it — add to `~/.gitconfig`:
 
@@ -383,6 +435,10 @@ Five tools need one manual step:
   plugin for something local (`llm install llm-ollama`, which reuses the same
   `OLLAMA_HOST`). See [llm](#llm).
 
+- **screen** leaves 24-bit colour off until told otherwise — add
+  `truecolor on` to `~/.screenrc` and start a new session. See
+  [GNU Screen 5, built from source](#gnu-screen-5-built-from-source).
+
 - **xclip** talks to an X server, so it needs `$DISPLAY` pointing at a live one.
   It installs anywhere, but on a headless box or a plain `ssh` session it exits
   with `Error: Can't open display: (null)`. Connect with `ssh -X` (or `-Y`) and
@@ -397,6 +453,7 @@ Everything else works the moment it's on `PATH`. Run `make check` to confirm.
 make uninstall   # removes the ~/bin binaries this repo installed
 ```
 
+That includes `screen` and its `~/bin/screen-<version>/` build directory.
 Conda tools, `visidata`, `llm`, Miniforge, and your rc edits are left untouched
 (`pipx uninstall llm`, remove `~/miniforge3`, and drop the
 `# >>> terminal-setup >>>` block by hand if you want).

@@ -24,13 +24,17 @@ elif python3 -c 'import compression.zstd' 2>/dev/null \
   || python3 -c 'import pyzstd'          2>/dev/null; then ok "zstd via python3 (for the ollama client)"
 else warn "no zstd — 'make ollama' will install it from conda-forge"; fi
 
+# A C compiler and make are only for screen, the one tool built from source.
+if (have gcc || have cc) && have make; then ok "C compiler + make (to build GNU Screen 5)"
+else warn "no C compiler and/or make — screen, the last install step, will fail (everything before it still installs)"; fi
+
 case ":$PATH:" in
   *":$HOME/bin:"*) ok "\$HOME/bin is on PATH" ;;
   *) warn "\$HOME/bin not on PATH — run 'make setup' or add it yourself" ;;
 esac
 
 if have conda || have mamba || [[ -x "$HOME/miniforge3/bin/conda" ]]; then
-  ok "conda available (for the conda-forge tools)"
+  ok "conda available (for the conda-forge tools, and the libraries screen links)"
 else
   warn "no conda — 'make install' will bootstrap Miniforge for the conda-forge tools"
 fi

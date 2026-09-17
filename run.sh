@@ -3,7 +3,7 @@
 # without `make`.  Usage:  ./run.sh <target>
 #   ./run.sh deps|check|install|setup|uninstall
 #   ./run.sh binaries|conda-tools|pip-tools|miniforge
-#   ./run.sh bat|fzf|tmux|...        (any single tool)
+#   ./run.sh bat|fzf|tmux|screen|... (any single tool)
 #   FORCE=1 ./run.sh bat             (reinstall)
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -28,7 +28,7 @@ case "$t" in
     echo "usage: ./run.sh <target>"
     echo "  deps check freeze install setup uninstall"
     echo "  binaries conda-tools pip-tools miniforge"
-    echo "  <tool>   any of: ${BINTOOLS[*]} ${CONDATOOLS[*]} ${PIPTOOLS[*]} ollama" ;;
+    echo "  <tool>   any of: ${BINTOOLS[*]} ${CONDATOOLS[*]} ${PIPTOOLS[*]} ollama screen" ;;
   deps)        "$here/deps.sh" ;;
   check)       "$here/scripts/status.sh" ;;
   freeze)      "$here/scripts/freeze.sh" ;;
@@ -39,9 +39,11 @@ case "$t" in
   conda-tools) do_conda ;;
   pip-tools)   do_pip ;;
   ollama)      "$here/scripts/ollama.sh" ;;
+  screen)      "$here/scripts/screen.sh" ;;
   install)
     "$here/deps.sh"; do_binaries; do_conda; do_pip
     "$here/scripts/ollama.sh"
+    "$here/scripts/screen.sh"
     echo; ok "Done. Next: ./run.sh setup, then restart your shell." ;;
   *)
     if printf '%s\n' "${BINTOOLS[@]}"  | grep -qx "$t"; then "$here/scripts/binary.sh" "$t"

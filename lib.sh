@@ -100,8 +100,18 @@ forge_latest_tag() {
     | sed -E 's/.*"([^"]+)".*/\1/'
 }
 
+# gnu_latest_version <pkg>: print the newest version of a GNU package from its
+# ftp.gnu.org directory listing (e.g. 5.0.2 for screen). GNU publishes source
+# tarballs with no release API, so the listing is all there is to read.
+gnu_latest_version() {
+  curl -fsSL --retry 3 --connect-timeout 20 "https://ftp.gnu.org/gnu/$1/" \
+    | grep -oE "$1-[0-9]+(\.[0-9]+)*\.tar\.gz" \
+    | sed -E "s/^$1-(.*)\.tar\.gz$/\1/" \
+    | sort -uV | tail -1
+}
+
 # lock_get <name> <channel>: print the pinned version/tag for <name> in
-# <channel> (gh|conda|pip) from versions.lock, or nothing if unpinned.
+# <channel> (gh|conda|pip|gnu) from versions.lock, or nothing if unpinned.
 lock_get() {
   [[ -f "$LOCKFILE" ]] || return 0
   awk -F'\t' -v n="$1" -v c="$2" \
