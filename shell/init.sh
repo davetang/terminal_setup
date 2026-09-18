@@ -56,12 +56,43 @@ unset _ts_sh _ts_starship
 # LLM_MODEL overrides the default model for this shell only:
 # export LLM_MODEL=gpt-4.1-mini
 
+# --- language toolchains ('make sdks'; nothing below fires if you skipped it) ---
+# `go install` writes to $GOPATH/bin — ~/go/bin by default, which is NOT the
+# ~/bin this repo owns. Appended, not prepended: programs you built yourself
+# should not quietly shadow the curated set.
+_ts_gobin="${GOPATH:-$HOME/go}/bin"
+[ -d "$_ts_gobin" ] && case ":$PATH:" in *":$_ts_gobin:"*) ;; *) export PATH="$PATH:$_ts_gobin" ;; esac
+unset _ts_gobin
+
+# `java` needs nothing here — the launcher resolves ~/bin/java back to its own
+# JDK. Maven, Gradle and sbt are the reason: they read JAVA_HOME instead of
+# asking java where it lives, so derive it from the symlink 'make openjdk' made.
+#
+# Deliberately no ~/bin/jdk-*/ glob: this file is sourced by zsh too, and zsh's
+# default NOMATCH makes an unmatched glob an error rather than a literal, so
+# every shell without a JDK installed would start with a complaint. Following
+# the symlink also picks the JDK you actually linked rather than whichever
+# directory happens to sort last, if you keep more than one.
+if [ -z "${JAVA_HOME:-}" ] && [ -x "$HOME/bin/java" ]; then
+  _ts_java="$(readlink -f "$HOME/bin/java" 2>/dev/null)"
+  case "$_ts_java" in
+    */bin/java) JAVA_HOME="${_ts_java%/bin/java}"; export JAVA_HOME ;;
+  esac
+  unset _ts_java
+fi
+
 # --- optional aliases (uncomment the ones you want) ---
 # command -v bat  >/dev/null 2>&1 && alias cat='bat --paging=never'
-# command -v eza  >/dev/null 2>&1 && { alias ls='eza --group-directories-first'; alias ll='eza -lag --git'; alias tree='eza --tree'; }
+# command -v eza  >/dev/null 2>&1 && { alias ls='eza --group-directories-first'; alias ll='eza -lag --git'; }
+# 'make tree' installs the real tree, so this one now shadows a tool you have:
+# command -v eza  >/dev/null 2>&1 && alias tree='eza --tree'
 # command -v fd   >/dev/null 2>&1 && alias find='fd'
 # command -v rg   >/dev/null 2>&1 && alias grep='rg'
 # command -v dust >/dev/null 2>&1 && alias du='dust'
 # command -v duf  >/dev/null 2>&1 && alias df='duf'
 # command -v procs>/dev/null 2>&1 && alias ps='procs'
 # command -v btop >/dev/null 2>&1 && alias top='btop'
+# 'make coreutils' installs GNU coreutils g-prefixed (gls, gsort, gdate) so it
+# can't shadow the system's. Uncomment to prefer it where it is installed:
+# command -v gsort >/dev/null 2>&1 && alias sort='gsort'
+# command -v gdate >/dev/null 2>&1 && alias date='gdate'

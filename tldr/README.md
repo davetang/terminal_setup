@@ -5,7 +5,7 @@ Per-tool examples for [tealdeer](https://github.com/tealdeer-rs/tealdeer), the
 [`cheatsheet.md`](../cheatsheet.md), but delivered where you actually reach for
 it: `tldr <tool>`.
 
-One file per tool in this repo's set — 52 of them, matching `make check`.
+One file per tool in this repo's set — 57 of them, matching `make check`.
 
 ## Does the name need `.patch`? Yes, and it changes the behaviour
 
@@ -23,15 +23,21 @@ so if no upstream page exists the function returns `None` and `tldr <command>`
 prints *page not found* — the patch is never shown. So the suffix has to follow
 what upstream publishes:
 
-- **47 tools have an upstream page** → `<command>.patch.md`, holding only the
+- **51 tools have an upstream page** → `<command>.patch.md`, holding only the
   extra examples this setup adds (the marker line `- terminal-setup extras`
   shows where upstream ends).
-- **5 have none** → `<command>.page.md`, a complete page: `csvtk`, `seqkit`,
-  `viddy`, `ttyper`, `vd`.
+- **6 have none** → `<command>.page.md`, a complete page: `csvtk`, `seqkit`,
+  `viddy`, `ttyper`, `vd`, `gls`.
 
 Checked against tldr-pages, not assumed: `csvtk`, `seqkit`, `viddy` and `ttyper`
 have no page at all, and visidata is published under neither `vd` nor
 `visidata`. Re-check with `tldr <command>` after a `tldr --update`.
+
+`gls` is the sixth for a different reason: upstream *does* publish it, but only
+under the `osx` platform, because g-prefixed coreutils are normally a macOS
+thing. On Linux that page is not in the platform directories tealdeer searches,
+so a patch would have nothing to attach to — hence a full page. It stands in
+for the whole g-prefixed set `make coreutils` installs, not just `gls`.
 
 Two other quirks worth knowing:
 

@@ -2,8 +2,9 @@
 # run.sh — make-free entry point. Mirrors the Makefile targets 1:1, for hosts
 # without `make`.  Usage:  ./run.sh <target>
 #   ./run.sh deps|check|install|setup|uninstall
-#   ./run.sh binaries|conda-tools|pip-tools|miniforge
+#   ./run.sh binaries|conda-tools|pip-tools|sdks|miniforge
 #   ./run.sh bat|fzf|tmux|screen|... (any single tool)
+#   ./run.sh sdks|go|openjdk|ohmyzsh (extras; not part of 'install')
 #   FORCE=1 ./run.sh bat             (reinstall)
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -16,12 +17,15 @@ BINTOOLS=(bat eza fd rg sd dust duf procs btop delta hyperfine
           just chezmoi xh tldr lazygit
           shellcheck shfmt ruff
           gh tea pandoc viddy trippy tt ttyper)
-CONDATOOLS=(tmux zsh datamash parallel pv goaccess xclip ncdu)
+CONDATOOLS=(tmux zsh datamash parallel pv goaccess xclip ncdu
+            tree pigz coreutils)
 PIPTOOLS=(visidata llm)
+SDKTOOLS=(go openjdk)
 
 do_binaries()  { local b; for b in "${BINTOOLS[@]}";  do "$here/scripts/binary.sh" "$b"; done; }
 do_conda()     { local c; for c in "${CONDATOOLS[@]}"; do "$here/scripts/$c.sh"; done; }
 do_pip()       { local p; for p in "${PIPTOOLS[@]}";  do "$here/scripts/$p.sh"; done; }
+do_sdks()      { local s; for s in "${SDKTOOLS[@]}";  do "$here/scripts/$s.sh"; done; }
 
 t="${1:-help}"
 case "$t" in
@@ -29,7 +33,8 @@ case "$t" in
     echo "usage: ./run.sh <target>"
     echo "  deps check freeze install setup uninstall"
     echo "  binaries conda-tools pip-tools miniforge"
-    echo "  <tool>   any of: ${BINTOOLS[*]} ${CONDATOOLS[*]} ${PIPTOOLS[*]} ollama screen" ;;
+    echo "  sdks ohmyzsh   (extras, not part of 'install')"
+    echo "  <tool>   any of: ${BINTOOLS[*]} ${CONDATOOLS[*]} ${PIPTOOLS[*]} ${SDKTOOLS[*]} ollama screen" ;;
   deps)        "$here/deps.sh" ;;
   check)       "$here/scripts/status.sh" ;;
   freeze)      "$here/scripts/freeze.sh" ;;
@@ -39,6 +44,8 @@ case "$t" in
   binaries)    do_binaries ;;
   conda-tools) do_conda ;;
   pip-tools)   do_pip ;;
+  sdks)        do_sdks ;;
+  ohmyzsh)     "$here/scripts/ohmyzsh.sh" ;;
   ollama)      "$here/scripts/ollama.sh" ;;
   screen)      "$here/scripts/screen.sh" ;;
   install)
@@ -50,5 +57,6 @@ case "$t" in
     if printf '%s\n' "${BINTOOLS[@]}"  | grep -qx "$t"; then "$here/scripts/binary.sh" "$t"
     elif printf '%s\n' "${CONDATOOLS[@]}" | grep -qx "$t"; then "$here/scripts/$t.sh"
     elif printf '%s\n' "${PIPTOOLS[@]}"   | grep -qx "$t"; then "$here/scripts/$t.sh"
+    elif printf '%s\n' "${SDKTOOLS[@]}"   | grep -qx "$t"; then "$here/scripts/$t.sh"
     else die "unknown target '$t' — try ./run.sh help"; fi ;;
 esac

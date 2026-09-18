@@ -23,6 +23,8 @@ for more examples once installed.
 - [Shell & multiplexer](#shell--multiplexer)
 - [Clipboard (xclip)](#clipboard-xclip)
 - [Disk usage (ncdu)](#disk-usage-ncdu)
+- [GNU coreutils, g-prefixed](#gnu-coreutils-g-prefixed)
+- [Language toolchains (go, openjdk)](#language-toolchains-go-openjdk)
 - [Housekeeping](#housekeeping)
 
 ## Coreutils replacements
@@ -43,7 +45,12 @@ duf                         # df: mounted filesystems, coloured
 procs                       # ps: colourised, tree with --tree
 procs firefox               # filter by name
 btop                        # top/htop TUI; q to quit
+tree -L 2 -d               # the original: directories only, two levels deep
+tree -a -I .git            # dotfiles included, .git never
 ```
+
+`eza --tree` and `tree` overlap, and both are here on purpose: eza knows about
+git and .gitignore, tree draws what is actually on disk and speaks `-J` (JSON).
 
 ## git + benchmarking
 
@@ -107,7 +114,15 @@ tar cf - dir | pv | ssh host 'cat > dir.tar'
 parallel -j4 gzip ::: *.fastq       # gzip files, 4 at a time
 parallel 'echo {} ; grep -c foo {}' ::: *.txt
 find . -name '*.bam' | parallel samtools index   # feed a pipeline into parallel
+pigz -k big.fastq                   # gzip, but on every core; -k keeps the input
+pigz -p 4 -9 big.fastq              # 4 cores, smallest output
+tar -I pigz -cf dir.tar.gz dir/     # -I passes the whole compressor command
+tar -I unpigz -xf dir.tar.gz        # and back out again
 ```
+
+pigz writes ordinary gzip, so anything can read it back. Compression is what
+parallelises; decompression is mostly serial in the format itself, so `unpigz`
+helps but not nearly as much.
 
 ## Docs & watching
 
@@ -500,10 +515,52 @@ ncdu -o - ~/data | jq -r '..|objects|select(.dsize)|[.dsize,.name]|@tsv' \
 # into it, recalculate, and delete what you find without leaving the tool.
 ```
 
+## GNU coreutils, g-prefixed
+
+`make coreutils` installs conda-forge's **gnu-coreutils**: the same programs
+your system already has, one version newer, every name prefixed with `g`. The
+prefix is the point — `~/miniforge3/bin` sits ahead of `/usr/bin` on PATH, so
+an unprefixed build would silently replace `ls`, `cp`, `mv` and `rm` for every
+shell and every script. Same convention Homebrew uses on macOS.
+
+```sh
+gls --version | head -1     # confirm which one you're getting
+ls  --version | head -1     # ... versus the system's
+gsort --parallel=4 -T /scratch -k2,2n big.tsv   # sort on 4 cores
+gls --hyperlink=auto -l     # clickable paths, if the terminal supports it
+gcp --reflink=auto src dst  # share blocks instead of copying (btrfs, XFS, ZFS)
+gdate -d '2 weeks ago' +%Y-%m-%d
+ls ~/miniforge3/bin/g*      # everything the package installed
+```
+
+## Language toolchains (go, openjdk)
+
+Not part of `make install` — `make sdks`, or `make go` / `make openjdk`. Each
+unpacks into its own `~/bin/<name>-<version>/` with symlinks in `~/bin`.
+
+```sh
+go env GOROOT               # ~/bin/go-<ver>; go resolves its own symlink
+go install github.com/owner/tool@latest   # lands in ~/go/bin, NOT ~/bin
+CGO_ENABLED=0 go build -ldflags '-s -w'   # a static binary, like most tools here
+GOOS=linux GOARCH=arm64 go build          # cross-compile, no cross toolchain
+gofmt -w main.go && go mod tidy
+
+java -version && echo $JAVA_HOME          # JAVA_HOME is set by shell/init.sh
+java Main.java                            # run a source file, no compile step
+java -Xmx2g -jar app.jar
+$JAVA_HOME/bin/jshell                     # the rest of the JDK lives here
+```
+
+`~/go/bin` is appended to PATH by `shell/init.sh`, so things you build yourself
+never shadow the curated set. `java` finds its own JDK; `JAVA_HOME` exists for
+Maven, Gradle and sbt, which look it up instead of asking `java`.
+
 ## Housekeeping
 
 ```sh
-make check        # what's installed and where
+make check        # what's installed and where (extras listed separately)
 FORCE=1 make eza  # reinstall / upgrade a single tool to latest
+make sdks         # go + openjdk, the opt-in toolchains
+make ohmyzsh      # oh-my-zsh into ~/.oh-my-zsh, wired into ~/.zshrc
 make uninstall    # remove the ~/bin binaries this repo installed
 ```

@@ -32,6 +32,14 @@ FORCE=1 make bat      # overwrite an existing copy
 make check            # report what is / isn't installed
 ```
 
+Three things sit outside `make install`, because they are large or because they
+change your shell config rather than adding a binary:
+
+```sh
+make sdks             # go + openjdk (or: make go / make openjdk)
+make ohmyzsh          # oh-my-zsh into ~/.oh-my-zsh, wired into ~/.zshrc
+```
+
 Usage examples for every tool live in [`cheatsheet.md`](cheatsheet.md), and in
 [`tldr/`](tldr/) as tealdeer custom pages you can drop in for `tldr <tool>`.
 
@@ -44,6 +52,8 @@ Every target works with either `make <target>` or `./run.sh <target>`:
 | `deps` | read-only preflight (checks prerequisites) |
 | `install` | `deps` + everything: binaries, conda tools, pip tools, ollama, screen |
 | `binaries` / `conda-tools` / `pip-tools` | install just one group |
+| `sdks` | `go` + `openjdk` — language toolchains, **not** in `install` |
+| `ohmyzsh` | oh-my-zsh into `~/.oh-my-zsh`, wired into `~/.zshrc` — **not** in `install` |
 | `<tool>` | install a single tool (e.g. `make fzf`); prefix `FORCE=1` to reinstall |
 | `freeze` | pin every tool's current version → `versions.lock` |
 | `setup` | wire `~/bin` + tool init into your shell rc |
@@ -59,6 +69,9 @@ Required (all present on a stock Debian/Ubuntu): `curl`, `tar`, `gzip`,
 `lzma` modules cover those archive formats so nothing extra needs installing.
 Any `python3` will do; `llm` alone wants ≥ 3.10 and falls back to conda-forge
 below that.
+
+`git` is needed only by `make ohmyzsh`, which is a git clone; nothing in
+`make install` uses it.
 
 `make` is optional (use `./run.sh` instead), and a C compiler is not needed,
 with one exception: **screen** is built from source, so it needs both `make` and
@@ -125,22 +138,37 @@ reports whether you have them.
 | **goaccess** | real-time web log analyzer (TUI/HTML) | conda-forge |
 | **xclip** | pipe to/from the X11 clipboard | conda-forge |
 | **ncdu** | interactive disk usage browser (walk it, delete in place) | conda-forge |
+| **tree** | the original recursive directory listing | conda-forge |
+| **pigz** (+`unpigz`) | `gzip` across every core | conda-forge |
+| **coreutils** | GNU coreutils, g-prefixed: `gls`, `gsort`, `gdate` … | conda-forge |
 | **visidata** (`vd`) | interactive TUI for tabular data | pipx / pip / conda |
 | **llm** | prompt LLMs from the shell, pipe text into them | pipx / pip / conda |
 | **screen** (GNU) | terminal multiplexer; 5.x, for 24-bit colour | source (gcc + make) |
+| **go** | the Go toolchain | go.dev tarball — `make sdks` |
+| **openjdk** | Eclipse Temurin JDK (`java`, `javac`, `jar`, `jshell`) | Adoptium — `make sdks` |
+| **oh-my-zsh** | zsh configuration framework | git clone — `make ohmyzsh` |
 
 Binaries download straight from their upstream release page into `~/bin` — GitHub
 for all but `tea`, which Gitea develops on gitea.com (see
 [Tools not on GitHub](#tools-not-on-github)) — pinned to the versions in
 `versions.lock` (see [Reproducibility](#reproducibility-version-pinning)).
 `ollama` is the odd one out — see [ollama, client only](#ollama-client-only).
-`tmux`, `zsh`, `datamash`, `parallel`, `pv`, `goaccess`, `xclip`, and `ncdu` have
-no static binary this setup can fetch (see [Tools not on
-GitHub](#tools-not-on-github) for `ncdu`), so they come from conda-forge — if no
-`conda` is found, `make install`
+`tmux`, `zsh`, `datamash`, `parallel`, `pv`, `goaccess`, `xclip`, `ncdu`,
+`tree`, `pigz` and `coreutils` have no static binary this setup can fetch (see
+[Tools not on GitHub](#tools-not-on-github) for `ncdu`), so they come from
+conda-forge — if no `conda` is found, `make install`
 bootstraps Miniforge under `~/miniforge3` automatically. `visidata` and `llm`
 are pure Python (`pipx` → `pip --user` → conda fallback). `screen` is the one
 source build — see [GNU Screen 5, built from source](#gnu-screen-5-built-from-source).
+
+The last three rows are opt-in and deliberately outside `make install` — see
+[Language toolchains](#language-toolchains-go-openjdk) and
+[oh-my-zsh](#oh-my-zsh). `coreutils` is worth a word too: it installs
+conda-forge's **gnu-coreutils**, which is the same source built with
+`--program-prefix=g`. The unprefixed package would land in `~/miniforge3/bin`,
+which `shell/init.sh` puts ahead of `/usr/bin`, so every `ls`, `cp`, `mv` and
+`rm` in every shell — including the ones inside other people's scripts — would
+quietly become conda's build. `gls`, `gsort` and `gdate` cannot do that.
 
 ## ollama, client only
 
@@ -270,6 +298,102 @@ Two consequences:
   `~/miniforge3/bin` ahead of `~/bin`, so a `screen` 4.8.0 installed there wins.
   The build warns if it finds one; `conda remove screen` clears it.
 
+## Language toolchains (go, openjdk)
+
+Opt-in, and left out of `make install` on purpose: 67 MB and 134 MB to download
+respectively, considerably more once unpacked, and most people who want a
+terminal do not want a JDK with it.
+
+```sh
+make sdks          # both
+make go            # or one at a time
+make openjdk
+```
+
+Neither is a single binary, so neither is a `binaries.tsv` row. Each unpacks
+into its own prefix — `~/bin/go-<version>/`, `~/bin/jdk-<release>/` — and only
+the commands you actually type are symlinked into `~/bin`: `go` and `gofmt`,
+`java`, `javac`, `jar` and `jshell`. The rest of the JDK stays in
+`$JAVA_HOME/bin`. Both resolve their own symlink to find their home, so nothing
+breaks by being linked this way, and `GOROOT` never needs setting. `shell/init.sh`
+does set `JAVA_HOME`, because Maven, Gradle and sbt read it rather than asking
+`java` where it lives.
+
+**Where each comes from, and why.** Go's git tags are not its downloads, so
+there is no release API to query; `go.dev/dl/?mode=json` is the same list the
+download page renders, and it carries a SHA-256 for every file, which the
+install verifies. For Java, `jdk.java.net` serves only the current release,
+Oracle's own builds carry licence conditions, and conda-forge's `openjdk` would
+put a JDK in the base environment — so it is Eclipse Temurin, through the
+Adoptium API, checksum and all.
+
+**Which Java.** `versions.lock` pins **21**, so `make openjdk` installs the
+newest Temurin 21. The precedence is `JDK_VERSION` → the lockfile → the most
+recent LTS Adoptium lists, so `JDK_VERSION=17 make openjdk` overrides for one
+run without editing anything.
+
+21 rather than the newest LTS because of what actually consumes it here.
+Nextflow wants "Java 17 (or later, up to 26)", so 25 would do — but GATK and
+Picard officially support **Java 17 only**, and JDK 24 permanently disabled the
+Security Manager ([JEP 486](https://openjdk.org/jeps/486)), which is where
+older JVM-based bioinformatics tooling starts to fall over. 21 clears
+Nextflow's bar, stays well short of that cliff, and has a longer runway than
+17. Drop to 17 if you run GATK or Picard on the host rather than in a
+container.
+
+Note that the lockfile pins that *feature release* and not the exact build,
+unlike every other row in the file: Temurin ships security patches on a
+quarterly cycle, and pinning past them would leave you sitting on a JDK with
+known CVEs. A reproducible Java 21 is the useful promise; a frozen
+`21.0.12.1+1` is a liability. For the same reason `make freeze` **keeps**
+whatever feature release is already pinned instead of moving you to the newest
+LTS — that row is a choice, not a version to look up.
+
+One thing worth knowing about Go: `go install` writes to `$GOPATH/bin` — `~/go/bin`
+by default — which is **not** the `~/bin` this repo owns. `shell/init.sh` appends
+it to PATH rather than prepending, so a tool you built yourself never silently
+shadows the curated set.
+
+## oh-my-zsh
+
+```sh
+make zsh           # if you don't have one already
+make ohmyzsh
+exec zsh
+```
+
+A git clone into `~/.oh-my-zsh` plus a handful of lines in `~/.zshrc`. Upstream's
+`install.sh` does the clone, run unattended with the two things it would
+otherwise do to your account switched off: no `chsh` (changing your login shell
+is not this repo's business, and a conda `zsh` is not in `/etc/shells` anyway)
+and no replacing an existing `~/.zshrc`.
+
+That second flag has a catch this repo works around. When `~/.zshrc` already
+exists, `KEEP_ZSHRC=yes` makes the installer keep it **and skip wiring oh-my-zsh
+into it entirely** — the clone would sit there doing nothing. So `scripts/ohmyzsh.sh`
+adds the block itself, guarded the same way `make setup`'s block is, and inserts
+it *above* that block:
+
+```sh
+# >>> oh-my-zsh >>>
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME="robbyrussell"
+plugins=(git)
+source "$ZSH/oh-my-zsh.sh"
+# <<< oh-my-zsh <<<
+
+# >>> terminal-setup >>>
+...
+```
+
+The order matters. `shell/init.sh` reads `ZSH_THEME` to decide whether to start
+starship — the two both own the prompt and cannot share it — and sourcing
+`oh-my-zsh.sh` afterwards would reset the prompt no matter what that check
+decided. Set `TS_STARSHIP=1` to force starship anyway, or `0` to never use it.
+
+`FORCE=1 make ohmyzsh` reinstalls; the old `~/.oh-my-zsh` is **moved aside**
+rather than deleted, because custom themes and plugins live in it.
+
 ## How it works
 
 ```
@@ -281,10 +405,12 @@ deps.sh                        read-only preflight
 scripts/binary.sh              install one binary tool from binaries.tsv
 scripts/freeze.sh              resolve current versions → versions.lock
 scripts/miniforge.sh           bootstrap Miniforge (no-root)
-scripts/{tmux,zsh,…,xclip,ncdu}.sh    conda-forge installs (one per CONDATOOLS entry)
+scripts/{tmux,zsh,…,tree,pigz,coreutils}.sh   conda-forge installs (one per CONDATOOLS entry)
 scripts/{visidata,llm}.sh      pipx / pip / conda installs
 scripts/ollama.sh              stream the ollama CLI out of upstream's bundle
 scripts/screen.sh              build GNU Screen 5 from source, linked against Miniforge
+scripts/{go,openjdk}.sh        vendor tarballs → ~/bin/<name>-<version>/ (make sdks)
+scripts/ohmyzsh.sh             clone oh-my-zsh and wire it into ~/.zshrc
 scripts/setup_shell.sh         wire the shell rc
 scripts/status.sh              back the check target
 scripts/uninstall.sh           remove installed ~/bin binaries
@@ -301,7 +427,10 @@ Upstream links its glibc builds against whatever libc the CI runner had — ofte
 newer than an LTS distro's — and the binary then fails at startup with
 ``version `GLIBC_2.xx' not found``. The musl builds are static and always run.
 After each install the binary is checked with `ldd`, so a tool that ships no
-static build is flagged straight away rather than at first use.
+static build is flagged straight away rather than at first use. That check
+resolves the symlink first: a binary whose RPATH is `$ORIGIN`-relative (the JDK
+launcher finding its `libjli.so`) would otherwise have `$ORIGIN` expanded to
+`~/bin` by `ldd` and be reported broken while running perfectly.
 
 ### Tools not on GitHub
 
@@ -341,12 +470,18 @@ tmux        conda          3.7b_
 visidata    pip            3.4
 llm         pip            0.31.1
 screen      gnu            5.0.2
+go          go             go1.27.1
+openjdk     adoptium       21
 ```
 
 - **Forge tools** (GitHub or Gitea) install from `releases/tags/<tag>` (the
   exact tag), not `latest`; the `gh` channel in the lockfile means "a release
   tag", not necessarily github.com. **conda/pip tools** install `pkg=version`.
   **screen** builds that version's source tarball from ftp.gnu.org (`gnu`).
+  **go** takes that exact release from go.dev. **openjdk** is the one loose
+  pin in the file — `adoptium` holds a feature release (`21`), and the newest
+  patch of it is installed; `make freeze` leaves that choice alone. See
+  [Language toolchains](#language-toolchains-go-openjdk) for why.
 - **Refresh the pins** to current upstream at any time:
 
   ```sh
@@ -456,10 +591,13 @@ Everything else works the moment it's on `PATH`. Run `make check` to confirm.
 make uninstall   # removes the ~/bin binaries this repo installed
 ```
 
-That includes `screen` and its `~/bin/screen-<version>/` build directory.
-Conda tools, `visidata`, `llm`, Miniforge, and your rc edits are left untouched
-(`pipx uninstall llm`, remove `~/miniforge3`, and drop the
-`# >>> terminal-setup >>>` block by hand if you want).
+That includes `screen`, `go` and the JDK, along with their `~/bin/screen-<version>/`,
+`~/bin/go-<version>/` and `~/bin/jdk-<release>/` trees.
+
+Conda tools (`tree`, `pigz` and `coreutils` among them), `visidata`, `llm`,
+Miniforge, `~/.oh-my-zsh` and your rc edits are left untouched (`pipx uninstall
+llm`, remove `~/miniforge3`, run oh-my-zsh's own `uninstall_oh_my_zsh`, and drop
+the `# >>> terminal-setup >>>` block by hand if you want).
 
 ## Intentionally omitted
 
@@ -471,6 +609,12 @@ Deliberately **not** installed:
 - **Category alternatives** — fish/nushell (vs zsh), zellij (vs tmux),
   bottom/`btm` (vs btop), ranger/nnn/lf (vs yazi), w3m/lynx/browsh (text
   browsers), mutt/aerc/himalaya (email), pixi/mamba (vs the Miniforge base).
+- **Other language runtimes** — `node` and the Neovim language servers live in
+  [`nvim_setup`](https://github.com/davetang/nvim_setup), which is where they
+  are actually used; `nvm`, `lua` and `luarocks` are still in
+  [`install_scripts`](https://github.com/davetang/install_scripts). `go` and
+  `openjdk` are here because they are general toolchains rather than editor
+  plumbing, and even they are opt-in.
 
 To add any of them, drop a row in `binaries.tsv` (if it ships a Linux binary) or
 `conda install -c conda-forge <pkg>`.

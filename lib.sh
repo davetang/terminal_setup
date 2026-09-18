@@ -111,7 +111,7 @@ gnu_latest_version() {
 }
 
 # lock_get <name> <channel>: print the pinned version/tag for <name> in
-# <channel> (gh|conda|pip|gnu) from versions.lock, or nothing if unpinned.
+# <channel> (gh|conda|pip|gnu|go|adoptium) from versions.lock, or nothing if unpinned.
 lock_get() {
   [[ -f "$LOCKFILE" ]] || return 0
   awk -F'\t' -v n="$1" -v c="$2" \
@@ -202,6 +202,13 @@ install_binary() {
 _check_libc() {
   local p="$1" out
   have ldd || return 0
+  # ldd has to see the real file, not the $BIN symlink pointing at it. A binary
+  # whose RPATH is $ORIGIN-relative — the JDK launcher finding its libjli.so,
+  # for one — has $ORIGIN expanded to the *symlink's* directory here, so ldd
+  # reports the tool's own libraries as "not found". At run time the loader
+  # expands $ORIGIN from /proc/self/exe, i.e. the resolved path, and finds
+  # them. Without this the warning below fires on a tool that runs perfectly.
+  have readlink && p="$(readlink -f "$p" 2>/dev/null || printf '%s' "$1")"
   out="$(ldd "$p" 2>&1 || true)"
   grep -q 'not found' <<<"$out" || return 0
   warn "$(basename "$p") cannot run on this host:"
