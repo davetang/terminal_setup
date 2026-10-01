@@ -592,5 +592,6 @@ make check        # what's installed and where (extras listed separately)
 FORCE=1 make eza  # reinstall / upgrade a single tool to latest
 make sdks         # go + openjdk, the opt-in toolchains
 make ohmyzsh      # oh-my-zsh into ~/.oh-my-zsh, wired into ~/.zshrc
+make tldr-pages   # this repo's examples into tldr: tldr ncdu, tldr csvtk
 make uninstall    # remove the ~/bin binaries this repo installed
 ```

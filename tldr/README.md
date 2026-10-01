@@ -51,6 +51,13 @@ Two other quirks worth knowing:
 ## Installing them
 
 ```sh
+make tldr-pages                            # or: ./run.sh tldr-pages
+```
+
+It installs tealdeer first if it's missing (`make tldr`), then does what you'd
+otherwise do by hand:
+
+```sh
 tldr --update                              # patches need a cached page to attach to
 tldr --show-paths                          # confirm the "Custom pages dir:" line
 mkdir -p ~/.local/share/tealdeer/pages
@@ -60,7 +67,16 @@ cp tldr/*.page.md tldr/*.patch.md ~/.local/share/tealdeer/pages/
 `--show-paths` prints the directory tealdeer actually uses, followed by where
 that came from — `/home/you/.local/share/tealdeer/pages (OS convention)` is the
 Linux default. `[directories] custom_pages_dir` in
-`~/.config/tealdeer/config.toml` overrides it; copy to whatever that line says.
+`~/.config/tealdeer/config.toml` overrides it; `make tldr-pages` copies to
+whatever that line says.
+
+It then checks every patch and warns about the two ways one can go unseen: no
+upstream page in the cache for it to attach to, or a `<command>.page.md` in the
+custom pages dir that replaces the upstream page and takes the patch with it.
+
+Re-run it after a `git pull` to pick up edited pages. It overwrites only files
+with the same names, so pages of your own are left alone, and a page this repo
+drops stays in the custom pages dir until you delete it.
 
 Then check one:
 

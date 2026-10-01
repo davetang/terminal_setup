@@ -32,16 +32,18 @@ FORCE=1 make bat      # overwrite an existing copy
 make check            # report what is / isn't installed
 ```
 
-Three things sit outside `make install`, because they are large or because they
-change your shell config rather than adding a binary:
+Four things sit outside `make install`, because they are large or because they
+write outside `~/bin` rather than adding a binary:
 
 ```sh
 make sdks             # go + openjdk (or: make go / make openjdk)
 make ohmyzsh          # oh-my-zsh into ~/.oh-my-zsh, wired into ~/.zshrc
+make tldr-pages       # this repo's tldr pages into tealdeer's custom pages dir
 ```
 
 Usage examples for every tool live in [`cheatsheet.md`](cheatsheet.md), and in
-[`tldr/`](tldr/) as tealdeer custom pages you can drop in for `tldr <tool>`.
+[`tldr/`](tldr/) as tealdeer custom pages for `tldr <tool>`, which
+`make tldr-pages` installs (see [`tldr/README.md`](tldr/README.md)).
 
 ## Commands
 
@@ -54,6 +56,7 @@ Every target works with either `make <target>` or `./run.sh <target>`:
 | `binaries` / `conda-tools` / `pip-tools` | install just one group |
 | `sdks` | `go` + `openjdk` — language toolchains, **not** in `install` |
 | `ohmyzsh` | oh-my-zsh into `~/.oh-my-zsh`, wired into `~/.zshrc` — **not** in `install` |
+| `tldr-pages` | copy [`tldr/`](tldr/) into tealdeer's custom pages dir — **not** in `install` |
 | `<tool>` | install a single tool (e.g. `make fzf`); prefix `FORCE=1` to reinstall |
 | `freeze` | pin every tool's current version → `versions.lock` |
 | `setup` | wire `~/bin` + tool init into your shell rc |
@@ -450,11 +453,13 @@ scripts/sendcb.sh              fetch the sendcb script at its pinned commit
 scripts/screen.sh              build GNU Screen 5 from source, linked against Miniforge
 scripts/{go,openjdk}.sh        vendor tarballs → ~/bin/<name>-<version>/ (make sdks)
 scripts/ohmyzsh.sh             clone oh-my-zsh and wire it into ~/.zshrc
+scripts/tldr_pages.sh          copy tldr/ into tealdeer's custom pages dir
 scripts/setup_shell.sh         wire the shell rc
 scripts/status.sh              back the check target
 scripts/uninstall.sh           remove installed ~/bin binaries
 shell/init.sh                  PATH + tool init, sourced by your shell rc
 README.md · cheatsheet.md      this guide + per-tool usage examples
+tldr/                          the same examples as tealdeer custom pages
 ```
 
 Binaries are picked by matching a regex against each release asset's URL, so the

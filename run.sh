@@ -4,7 +4,7 @@
 #   ./run.sh deps|check|install|setup|uninstall
 #   ./run.sh binaries|conda-tools|pip-tools|sdks|miniforge
 #   ./run.sh bat|fzf|tmux|sendcb|screen|... (any single tool)
-#   ./run.sh sdks|go|openjdk|ohmyzsh (extras; not part of 'install')
+#   ./run.sh sdks|go|openjdk|ohmyzsh|tldr-pages (extras; not part of 'install')
 #   FORCE=1 ./run.sh bat             (reinstall)
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -33,7 +33,7 @@ case "$t" in
     echo "usage: ./run.sh <target>"
     echo "  deps check freeze install setup uninstall"
     echo "  binaries conda-tools pip-tools miniforge"
-    echo "  sdks ohmyzsh   (extras, not part of 'install')"
+    echo "  sdks ohmyzsh tldr-pages   (extras, not part of 'install')"
     echo "  <tool>   any of: ${BINTOOLS[*]} ${CONDATOOLS[*]} ${PIPTOOLS[*]} ${SDKTOOLS[*]} ollama sendcb screen" ;;
   deps)        "$here/deps.sh" ;;
   check)       "$here/scripts/status.sh" ;;
@@ -46,6 +46,7 @@ case "$t" in
   pip-tools)   do_pip ;;
   sdks)        do_sdks ;;
   ohmyzsh)     "$here/scripts/ohmyzsh.sh" ;;
+  tldr-pages)  "$here/scripts/binary.sh" tldr; "$here/scripts/tldr_pages.sh" ;;
   ollama)      "$here/scripts/ollama.sh" ;;
   sendcb)      "$here/scripts/sendcb.sh" ;;
   screen)      "$here/scripts/screen.sh" ;;
