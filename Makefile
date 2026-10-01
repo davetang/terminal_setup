@@ -33,7 +33,7 @@ SDKTOOLS := go openjdk
 help: ## Show this help
 	@echo "no-root terminal setup — installs modern CLI tools under \$$HOME/bin"
 	@echo
-	@awk 'BEGIN{FS":.*##"} /^[a-zA-Z0-9_-]+:.*##/{printf "  \033[36m%-12s\033[0m %s\n",$$1,$$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN{FS=":.*##"} /^[a-zA-Z0-9_-]+:.*##/{printf "  \033[36m%-12s\033[0m %s\n",$$1,$$2}' $(MAKEFILE_LIST)
 	@echo
 	@echo "  Groups : binaries  conda-tools  pip-tools  sdks"
 	@echo "  Single : make bat   make fzf   make tmux   ...  (any tool name)"
