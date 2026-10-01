@@ -100,6 +100,16 @@ forge_latest_tag() {
     | sed -E 's/.*"([^"]+)".*/\1/'
 }
 
+# forge_latest_commit <repo>: print the full SHA of the newest commit on the
+# default branch — the pin for a tool that publishes no releases (sendcb).
+# GitHub only: Gitea has no commits/HEAD endpoint. The commit's own sha is the
+# first one in the response; the tree and parent SHAs follow it.
+forge_latest_commit() {
+  _forge_api "$1" "commits/HEAD" \
+    | grep -oE '"sha":[[:space:]]*"[0-9a-f]{40}"' | head -1 \
+    | sed -E 's/.*"([0-9a-f]{40})".*/\1/'
+}
+
 # gnu_latest_version <pkg>: print the newest version of a GNU package from its
 # ftp.gnu.org directory listing (e.g. 5.0.2 for screen). GNU publishes source
 # tarballs with no release API, so the listing is all there is to read.
@@ -111,7 +121,7 @@ gnu_latest_version() {
 }
 
 # lock_get <name> <channel>: print the pinned version/tag for <name> in
-# <channel> (gh|conda|pip|gnu|go|adoptium) from versions.lock, or nothing if unpinned.
+# <channel> (gh|git|conda|pip|gnu|go|adoptium) from versions.lock, or nothing if unpinned.
 lock_get() {
   [[ -f "$LOCKFILE" ]] || return 0
   awk -F'\t' -v n="$1" -v c="$2" \

@@ -50,7 +50,7 @@ Every target works with either `make <target>` or `./run.sh <target>`:
 | Target | Does |
 |--------|------|
 | `deps` | read-only preflight (checks prerequisites) |
-| `install` | `deps` + everything: binaries, conda tools, pip tools, ollama, screen |
+| `install` | `deps` + everything: binaries, conda tools, pip tools, ollama, sendcb, screen |
 | `binaries` / `conda-tools` / `pip-tools` | install just one group |
 | `sdks` | `go` + `openjdk` — language toolchains, **not** in `install` |
 | `ohmyzsh` | oh-my-zsh into `~/.oh-my-zsh`, wired into `~/.zshrc` — **not** in `install` |
@@ -130,6 +130,7 @@ reports whether you have them.
 | **pandoc** | universal document converter | binary |
 | **viddy** | a modern `watch` | binary |
 | **ollama** | CLI for an Ollama server (**client only**) | binary |
+| **sendcb** | copy to your *own* clipboard from any shell, over SSH too (OSC 52) | script, pinned commit |
 | **tmux** | terminal multiplexer | conda-forge |
 | **zsh** | the shell | conda-forge |
 | **datamash** | group-by statistics | conda-forge |
@@ -153,6 +154,8 @@ for all but `tea`, which Gitea develops on gitea.com (see
 [Tools not on GitHub](#tools-not-on-github)) — pinned to the versions in
 `versions.lock` (see [Reproducibility](#reproducibility-version-pinning)).
 `ollama` is the odd one out — see [ollama, client only](#ollama-client-only).
+`sendcb` is a lone bash script with no releases, so it is fetched at a pinned
+commit — see [sendcb](#sendcb).
 `tmux`, `zsh`, `datamash`, `parallel`, `pv`, `goaccess`, `xclip`, `ncdu`,
 `tree`, `pigz` and `coreutils` have no static binary this setup can fetch (see
 [Tools not on GitHub](#tools-not-on-github) for `ncdu`), so they come from
@@ -254,6 +257,41 @@ machine — list them in `TS_LLM_PLUGINS`. This works on an existing `llm` too:
 ```sh
 TS_LLM_PLUGINS='llm-ollama llm-anthropic' make llm
 ```
+
+## sendcb
+
+[`sendcb`](https://github.com/davetang/sendcb) copies to the clipboard of the
+machine you're **sitting at**, from a shell on any machine you've SSHed into,
+tmux and GNU screen included:
+
+```sh
+git rev-parse HEAD | sendcb   # on the remote machine
+                              # then Cmd-V / Ctrl-V on your own
+```
+
+It sends the text to your terminal as an **OSC 52** escape sequence, which
+travels back over the SSH connection you already have: no X11 forwarding, no
+extra ports, nothing installed on your own machine. At a local desktop it uses
+`pbcopy`, `wl-copy`, `xclip` or `xsel` instead. That fills the gap `xclip`
+leaves: `xclip` copies to the clipboard of the machine it *runs on*, and over
+plain SSH that machine has none.
+
+```sh
+make sendcb            # or: ./run.sh sendcb (also run by make install)
+FORCE=1 make sendcb    # reinstall at the pinned commit
+```
+
+**Pinned to a commit.** sendcb publishes no releases, so `binaries.tsv` has no
+asset to match and there is no tag to pin. `versions.lock` holds a commit SHA
+instead, under a `git` channel of its own, and `scripts/sendcb.sh` fetches the
+script from that commit on raw.githubusercontent.com, which doesn't count
+against the GitHub API limit. `make freeze` moves the pin to the newest commit;
+with no pin, the install asks the API for it.
+
+**Upstream's `setup.sh` is not run.** It copies `sendcb` to `~/bin`, which this
+does too; adds `~/bin` to `PATH`, which `make setup` already does; and edits
+`~/.tmux.conf`, which is left to you. sendcb needs one line there: see
+[After installing](#after-installing).
 
 ## GNU Screen 5, built from source
 
@@ -408,6 +446,7 @@ scripts/miniforge.sh           bootstrap Miniforge (no-root)
 scripts/{tmux,zsh,…,tree,pigz,coreutils}.sh   conda-forge installs (one per CONDATOOLS entry)
 scripts/{visidata,llm}.sh      pipx / pip / conda installs
 scripts/ollama.sh              stream the ollama CLI out of upstream's bundle
+scripts/sendcb.sh              fetch the sendcb script at its pinned commit
 scripts/screen.sh              build GNU Screen 5 from source, linked against Miniforge
 scripts/{go,openjdk}.sh        vendor tarballs → ~/bin/<name>-<version>/ (make sdks)
 scripts/ohmyzsh.sh             clone oh-my-zsh and wire it into ~/.zshrc
@@ -466,6 +505,7 @@ Every tool is pinned in `versions.lock` — a small, git-tracked lockfile:
 name        channel        version-or-tag
 bat         gh             v0.26.1
 delta       gh             0.19.2
+sendcb      git            47de976ade1bca10a5a1fd0d4bf1104c68b0bed5
 tmux        conda          3.7b_
 visidata    pip            3.4
 llm         pip            0.31.1
@@ -476,7 +516,9 @@ openjdk     adoptium       21
 
 - **Forge tools** (GitHub or Gitea) install from `releases/tags/<tag>` (the
   exact tag), not `latest`; the `gh` channel in the lockfile means "a release
-  tag", not necessarily github.com. **conda/pip tools** install `pkg=version`.
+  tag", not necessarily github.com. **sendcb** has no releases, so `git` holds
+  a commit SHA and the script is fetched from that commit. **conda/pip tools**
+  install `pkg=version`.
   **screen** builds that version's source tarball from ftp.gnu.org (`gnu`).
   **go** takes that exact release from go.dev. **openjdk** is the one loose
   pin in the file — `adoptium` holds a feature release (`21`), and the newest
@@ -537,7 +579,7 @@ later, re-run `make setup` after it exists to wire your `~/.zshrc`.
 ## After installing
 
 `make setup` handles `PATH` and auto-initialises starship/zoxide/atuin/direnv/fzf.
-Six tools need one manual step:
+Seven tools need one manual step:
 
 - **delta** does nothing until git is told to use it — add to `~/.gitconfig`:
 
@@ -581,7 +623,16 @@ Six tools need one manual step:
   It installs anywhere, but on a headless box or a plain `ssh` session it exits
   with `Error: Can't open display: (null)`. Connect with `ssh -X` (or `-Y`) and
   a local X server, and `echo $DISPLAY` should show something like
-  `localhost:10.0`. Nothing else in this setup depends on it.
+  `localhost:10.0`. Nothing else in this setup needs it: `sendcb` uses it only
+  at a local X desktop, and over SSH reaches your own clipboard without X.
+
+- **sendcb** inside tmux needs `set -g set-clipboard on` in `~/.tmux.conf`.
+  tmux's default, `external`, drops the sequence, and sendcb warns when it
+  would; `tmux set -g set-clipboard on` applies it to a running server. On your
+  own machine the terminal has to accept OSC 52: most do by default, iTerm2
+  needs Settings → General → Selection → "Applications in terminal may access
+  clipboard", and GNOME Terminal and other VTE terminals can't. Over mosh, both
+  ends need 1.4.0 or later.
 
 Everything else works the moment it's on `PATH`. Run `make check` to confirm.
 

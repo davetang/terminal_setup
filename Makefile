@@ -27,7 +27,7 @@ PIPTOOLS := visidata llm
 SDKTOOLS := go openjdk
 
 .PHONY: help deps check install setup uninstall miniforge freeze \
-        binaries conda-tools pip-tools sdks ollama screen ohmyzsh \
+        binaries conda-tools pip-tools sdks ollama sendcb screen ohmyzsh \
         $(BINTOOLS) $(CONDATOOLS) $(PIPTOOLS) $(SDKTOOLS)
 
 help: ## Show this help
@@ -49,7 +49,7 @@ check: ## Report install status of every tool
 freeze: ## Pin every tool to its current version -> versions.lock
 	@$(ROOT)scripts/freeze.sh
 
-install: deps binaries conda-tools pip-tools ollama screen ## Install the whole curated set
+install: deps binaries conda-tools pip-tools ollama sendcb screen ## Install the whole curated set
 	@echo
 	@echo "Done. Next: 'make setup' to wire your shell, then restart it."
 
@@ -78,6 +78,9 @@ ohmyzsh: ## Install Oh My Zsh into ~/.oh-my-zsh and wire it into ~/.zshrc
 
 ollama: ## Install the ollama CLI, client only (queries a server, can't serve)
 	@$(ROOT)scripts/ollama.sh
+
+sendcb: ## Install sendcb: copy to your local clipboard, over SSH too (OSC 52)
+	@$(ROOT)scripts/sendcb.sh
 
 screen: ## Build GNU Screen 5 from source (24-bit colour; needs gcc + make)
 	@$(ROOT)scripts/screen.sh

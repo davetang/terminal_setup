@@ -21,7 +21,7 @@ for more examples once installed.
 - [Prompt, env, HTTP, docs](#prompt-env-http-docs)
 - [Project tasks & dotfiles](#project-tasks--dotfiles)
 - [Shell & multiplexer](#shell--multiplexer)
-- [Clipboard (xclip)](#clipboard-xclip)
+- [Clipboard (sendcb, xclip)](#clipboard-sendcb-xclip)
 - [Disk usage (ncdu)](#disk-usage-ncdu)
 - [GNU coreutils, g-prefixed](#gnu-coreutils-g-prefixed)
 - [Language toolchains (go, openjdk)](#language-toolchains-go-openjdk)
@@ -459,7 +459,37 @@ echo 'truecolor on' >> ~/.screenrc   # 24-bit colour, in sessions started after 
 chsh -s "$(command -v zsh)" # make zsh your login shell (optional)
 ```
 
-## Clipboard (xclip)
+## Clipboard (sendcb, xclip)
+
+Two ways to reach a clipboard, and which one works depends on where you are.
+`sendcb` copies to the machine you are *sitting at*, over SSH and through
+tmux or screen. `xclip` talks to an X server, so it copies to the machine it
+*runs on*, and needs `$DISPLAY`. Over plain SSH, reach for `sendcb`.
+
+### sendcb
+
+```sh
+git rev-parse HEAD | sendcb           # then Cmd-V / Ctrl-V on your own machine
+sendcb ~/.ssh/id_ed25519.pub          # copy a file
+pwd | sendcb -n                       # no trailing newline
+history | tail -n 20 | sendcb
+sendcb -v results.tsv                 # say which method: osc52, via tmux, wrapped for screen
+
+# pairs with the rest of the setup
+jq -r '.[].name' data.json | sendcb
+git diff | llm -s 'write a commit message' | sendcb
+
+# inside tmux it needs set-clipboard on, or tmux drops the sequence (it warns)
+tmux set -g set-clipboard on          # running server; keep it in ~/.tmux.conf
+# a screen/tmux session started at the desktop, reattached over SSH, has no
+# $SSH_CONNECTION, so sendcb uses the desktop clipboard; -o forces OSC 52
+some_command | sendcb -o
+# copy only: terminals refuse OSC 52 reads, so paste with Cmd-V / Ctrl-V.
+# iTerm2 has OSC 52 off: Settings > General > Selection > "Applications in
+# terminal may access clipboard". GNOME Terminal and other VTE ones can't.
+```
+
+### xclip
 
 ```sh
 # X has three selections; CLIPBOARD is the one Ctrl-V pastes from.
