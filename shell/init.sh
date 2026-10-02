@@ -26,6 +26,12 @@ if [ -n "$_ts_sh" ]; then
   command -v atuin    >/dev/null 2>&1 && eval "$(atuin init $_ts_sh)"
   command -v direnv   >/dev/null 2>&1 && eval "$(direnv hook $_ts_sh)"
   command -v fzf      >/dev/null 2>&1 && eval "$(fzf --$_ts_sh 2>/dev/null)"
+  # notify's hook: a command that runs for a minute or more notifies when it
+  # finishes. Last, because in bash it has to be first in PROMPT_COMMAND to see
+  # the command's exit status, and starship, atuin and direnv put themselves at
+  # the front too. Needs bash 4.4+; it does nothing in older bash or
+  # non-interactive shells. TS_NOTIFY_HOOK=0 above this block turns it off.
+  [ "${TS_NOTIFY_HOOK:-1}" != 0 ] && [ -f "$HOME/bin/notify-hook.sh" ] && . "$HOME/bin/notify-hook.sh"
 fi
 unset _ts_sh _ts_starship
 

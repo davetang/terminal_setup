@@ -3,7 +3,8 @@
 # Columns: name <TAB> channel(gh|git|conda|pip|gnu|go|adoptium) <TAB> version-or-tag
 # 'gh' means a release tag from the tool's forge (GitHub, or the Gitea
 # host named in binaries.tsv), not that it came from github.com.
-# 'git' is a commit SHA, for a tool that publishes no releases (sendcb).
+# 'git' is a commit SHA, for a tool that publishes no releases (sendcb,
+# notify).
 # 'adoptium' is the one loose pin: it holds a JDK *feature* release (21,
 # 25) and openjdk.sh installs the newest patch of it, because Temurin
 # ships security fixes quarterly and pinning past them is a liability.
@@ -50,6 +51,7 @@ pandoc	gh	3.10.2
 viddy	gh	v1.3.1
 ollama	gh	v0.33.1
 sendcb	git	47de976ade1bca10a5a1fd0d4bf1104c68b0bed5
+notify	git	1d37c3ea2841612a661efc6f83e5f18b007fc9e0
 tmux	conda	3.7c_
 zsh	conda	5.9
 datamash	conda	1.9

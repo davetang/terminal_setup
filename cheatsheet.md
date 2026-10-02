@@ -22,6 +22,7 @@ for more examples once installed.
 - [Project tasks & dotfiles](#project-tasks--dotfiles)
 - [Shell & multiplexer](#shell--multiplexer)
 - [Clipboard (sendcb, xclip)](#clipboard-sendcb-xclip)
+- [Notifications (notify)](#notifications-notify)
 - [Disk usage (ncdu)](#disk-usage-ncdu)
 - [GNU coreutils, g-prefixed](#gnu-coreutils-g-prefixed)
 - [Language toolchains (go, openjdk)](#language-toolchains-go-openjdk)
@@ -511,6 +512,39 @@ xclip -sel c -o | llm 'summarise this'
 #   Error: Can't open display: (null)
 # after a copy, xclip forks and stays running — that process *is* the
 # selection owner; kill it and the clipboard content goes with it.
+```
+
+## Notifications (notify)
+
+`notify` pops up a desktop notification on the machine you are *sitting at*,
+over SSH and through tmux or screen, the way `sendcb` reaches its clipboard.
+`make setup` also loads its hook, so anything that runs for a minute or more
+notifies you when it finishes, without typing `notify` at all.
+
+```sh
+make -j8; notify -e $? build          # "Done: build" or "Failed (exit 2): build"
+notify -c snakemake -j 16             # run it, then "Done in 2h 14m: snakemake -j 16"
+notify 'alignment finished'
+notify -t 'job 4182' 'merged the BAM files'   # title defaults to the hostname
+notify -v hello                       # say which method: osc9, osc777, osc99, bell
+
+# pairs with the rest of the setup
+notify -c hyperfine 'sort big.tsv' 'gsort --parallel=8 big.tsv'
+# from a tmux pane: still notifies after you close the pane, if you're attached
+nohup sh -c 'make -j8; notify -e $? build' > make.log 2>&1 &
+
+# the hook: tune it below the terminal-setup block in ~/.bashrc or ~/.zshrc
+NOTIFY_MIN_SECONDS=300                # only for commands of 5 minutes or more
+NOTIFY_IGNORE+=':radian:k9s'          # += ; NOTIFY_IGNORE="$NOTIFY_IGNORE:x" breaks zsh
+export NOTIFY_METHOD=auto,bell        # also ring the bell (screen background windows)
+export NOTIFY_METHOD=bell             # Alacritty, Terminal.app, GNOME Terminal, mosh
+declare -p PS0 PROMPT_COMMAND         # bash: both mention _notify if the hook loaded
+
+# test the terminal on its own, outside tmux and screen
+printf '\e]9;hello from OSC 9\a'
+printf '\e]777;notify;notify;hello from OSC 777\a'
+# needs a terminal attached: nothing reaches you from cron, sbatch or a
+# detached tmux session. iTerm2 and Warp have notifications off by default.
 ```
 
 ## Disk usage (ncdu)

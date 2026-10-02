@@ -2,7 +2,7 @@
 # freeze.sh — resolve the current version of every tool and write versions.lock,
 # pinning the whole set for reproducible installs. Re-run any time to refresh.
 #   forge tools   -> exact release tag_name from GitHub or Gitea (one call each)
-#   sendcb        -> newest commit SHA on its default branch (it has no releases)
+#   sendcb notify -> newest commit SHA on the default branch (they have no releases)
 #   conda tools   -> conda-forge latest_version (anaconda.org API)
 #   pip tools     -> latest on PyPI
 #   gnu tools     -> newest source tarball on ftp.gnu.org (screen, built from source)
@@ -20,7 +20,8 @@ tmp="$TMP/versions.lock"
   echo "# Columns: name <TAB> channel(gh|git|conda|pip|gnu|go|adoptium) <TAB> version-or-tag"
   echo "# 'gh' means a release tag from the tool's forge (GitHub, or the Gitea"
   echo "# host named in binaries.tsv), not that it came from github.com."
-  echo "# 'git' is a commit SHA, for a tool that publishes no releases (sendcb)."
+  echo "# 'git' is a commit SHA, for a tool that publishes no releases (sendcb,"
+  echo "# notify)."
   echo "# 'adoptium' is the one loose pin: it holds a JDK *feature* release (21,"
   echo "# 25) and openjdk.sh installs the newest patch of it, because Temurin"
   echo "# ships security fixes quarterly and pinning past them is a liability."
@@ -48,14 +49,16 @@ else
   warn "ollama: could not resolve tag (left unpinned → latest)"
 fi
 
-# sendcb publishes no releases at all (it is one bash script on a branch), so
-# its pin is a commit rather than a tag, and freezing moves it to the newest.
-sha="$(forge_latest_commit davetang/sendcb)"
-if [[ -n "$sha" ]]; then
-  printf 'sendcb\tgit\t%s\n' "$sha" >> "$tmp"; ok "sendcb -> ${sha:0:7}"
-else
-  warn "sendcb: could not resolve the newest commit (left unpinned → latest)"
-fi
+# sendcb and notify publish no releases at all (each is bash on a branch), so
+# their pins are commits rather than tags, and freezing moves them to the newest.
+for name in sendcb notify; do
+  sha="$(forge_latest_commit "davetang/$name")"
+  if [[ -n "$sha" ]]; then
+    printf '%s\tgit\t%s\n' "$name" "$sha" >> "$tmp"; ok "$name -> ${sha:0:7}"
+  else
+    warn "$name: could not resolve the newest commit (left unpinned → latest)"
+  fi
+done
 
 log "resolving conda-forge versions…"
 for p in tmux zsh datamash parallel pv goaccess xclip ncdu tree pigz gnu-coreutils; do

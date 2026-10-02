@@ -52,7 +52,7 @@ Every target works with either `make <target>` or `./run.sh <target>`:
 | Target | Does |
 |--------|------|
 | `deps` | read-only preflight (checks prerequisites) |
-| `install` | `deps` + everything: binaries, conda tools, pip tools, ollama, sendcb, screen |
+| `install` | `deps` + everything: binaries, conda tools, pip tools, ollama, sendcb, notify, screen |
 | `binaries` / `conda-tools` / `pip-tools` | install just one group |
 | `sdks` | `go` + `openjdk` — language toolchains, **not** in `install` |
 | `ohmyzsh` | oh-my-zsh into `~/.oh-my-zsh`, wired into `~/.zshrc` — **not** in `install` |
@@ -134,6 +134,7 @@ reports whether you have them.
 | **viddy** | a modern `watch` | binary |
 | **ollama** | CLI for an Ollama server (**client only**) | binary |
 | **sendcb** | copy to your *own* clipboard from any shell, over SSH too (OSC 52) | script, pinned commit |
+| **notify** | desktop notification on your *own* machine from any shell, over SSH too; a hook for long commands | script, pinned commit |
 | **tmux** | terminal multiplexer | conda-forge |
 | **zsh** | the shell | conda-forge |
 | **datamash** | group-by statistics | conda-forge |
@@ -157,8 +158,8 @@ for all but `tea`, which Gitea develops on gitea.com (see
 [Tools not on GitHub](#tools-not-on-github)) — pinned to the versions in
 `versions.lock` (see [Reproducibility](#reproducibility-version-pinning)).
 `ollama` is the odd one out — see [ollama, client only](#ollama-client-only).
-`sendcb` is a lone bash script with no releases, so it is fetched at a pinned
-commit — see [sendcb](#sendcb).
+`sendcb` and `notify` are bash scripts with no releases, so they are fetched at
+a pinned commit — see [sendcb](#sendcb) and [notify](#notify).
 `tmux`, `zsh`, `datamash`, `parallel`, `pv`, `goaccess`, `xclip`, `ncdu`,
 `tree`, `pigz` and `coreutils` have no static binary this setup can fetch (see
 [Tools not on GitHub](#tools-not-on-github) for `ncdu`), so they come from
@@ -294,6 +295,56 @@ with no pin, the install asks the API for it.
 **Upstream's `setup.sh` is not run.** It copies `sendcb` to `~/bin`, which this
 does too; adds `~/bin` to `PATH`, which `make setup` already does; and edits
 `~/.tmux.conf`, which is left to you. sendcb needs one line there: see
+[After installing](#after-installing).
+
+## notify
+
+[`notify`](https://github.com/davetang/notify) is sendcb's sibling for
+notifications: it pops one up on the machine you're **sitting at**, from a
+shell on any machine you've SSHed into, tmux and GNU screen included:
+
+```sh
+make -j8; notify -e $? build   # on the remote machine
+                               # "Done: build", or "Failed (exit 2): build"
+```
+
+It sends an **OSC 9**, **OSC 777** or kitty's **OSC 99** escape sequence to your
+terminal, which shows it as a desktop notification. Like sendcb's OSC 52, it
+travels back over the SSH connection you already have. Inside tmux it writes to
+the attached terminals directly, so tmux needs no configuration.
+
+It comes with a **shell hook**, `notify-hook.sh`: once it's loaded, any command
+that runs for a minute or more notifies you when it finishes, with its exit
+status, run time and command line.
+
+```sh
+make notify            # or: ./run.sh notify (also run by make install)
+FORCE=1 make notify    # reinstall both files at the pinned commit
+```
+
+**Pinned to a commit**, the same way as [sendcb](#sendcb): no releases, so
+`versions.lock` holds a commit SHA under `git`, and `scripts/notify.sh` fetches
+`notify` and `notify-hook.sh` from that commit on raw.githubusercontent.com.
+
+**Upstream's `setup.sh` is not run.** It copies both files to `~/bin`, which
+this does too; adds `~/bin` to `PATH`, which `make setup` already does; and
+appends a line sourcing the hook to `~/.bashrc` or `~/.zshrc`, which
+`shell/init.sh` does instead. The hook loads after starship, atuin and direnv,
+because in bash it has to be first in `PROMPT_COMMAND` to see each command's
+exit status, and they put themselves at the front too. Anything later in
+`~/.bashrc` that does the same makes every notification say "Done", even for
+failures: put it above the `terminal-setup` block.
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `TS_NOTIFY_HOOK` | `1` | `0` leaves the hook out. Set it above the `terminal-setup` block |
+| `NOTIFY_MIN_SECONDS` | `60` | Notify for commands that ran at least this long |
+| `NOTIFY_IGNORE` | editors, pagers, REPLs, `ssh`, `tmux`, … | Commands that never notify; add with `NOTIFY_IGNORE+=':radian'` |
+| `NOTIFY_METHOD` | `auto` | `osc9`, `osc777`, `osc99` or `bell`, if `auto` picks wrong. `export` it |
+
+Set the last three below the `terminal-setup` block. The hook needs bash 4.4 or
+later (RHEL 7's 4.2 doesn't qualify) and skips itself in older bash; `notify`
+itself still works there. Your own terminal has to show the notifications: see
 [After installing](#after-installing).
 
 ## GNU Screen 5, built from source
@@ -450,6 +501,7 @@ scripts/{tmux,zsh,…,tree,pigz,coreutils}.sh   conda-forge installs (one per CO
 scripts/{visidata,llm}.sh      pipx / pip / conda installs
 scripts/ollama.sh              stream the ollama CLI out of upstream's bundle
 scripts/sendcb.sh              fetch the sendcb script at its pinned commit
+scripts/notify.sh              fetch notify and its shell hook at their pinned commit
 scripts/screen.sh              build GNU Screen 5 from source, linked against Miniforge
 scripts/{go,openjdk}.sh        vendor tarballs → ~/bin/<name>-<version>/ (make sdks)
 scripts/ohmyzsh.sh             clone oh-my-zsh and wire it into ~/.zshrc
@@ -511,6 +563,7 @@ name        channel        version-or-tag
 bat         gh             v0.26.1
 delta       gh             0.19.2
 sendcb      git            47de976ade1bca10a5a1fd0d4bf1104c68b0bed5
+notify      git            1d37c3ea2841612a661efc6f83e5f18b007fc9e0
 tmux        conda          3.7b_
 visidata    pip            3.4
 llm         pip            0.31.1
@@ -521,9 +574,9 @@ openjdk     adoptium       21
 
 - **Forge tools** (GitHub or Gitea) install from `releases/tags/<tag>` (the
   exact tag), not `latest`; the `gh` channel in the lockfile means "a release
-  tag", not necessarily github.com. **sendcb** has no releases, so `git` holds
-  a commit SHA and the script is fetched from that commit. **conda/pip tools**
-  install `pkg=version`.
+  tag", not necessarily github.com. **sendcb** and **notify** have no
+  releases, so `git` holds a commit SHA and their files are fetched from that
+  commit. **conda/pip tools** install `pkg=version`.
   **screen** builds that version's source tarball from ftp.gnu.org (`gnu`).
   **go** takes that exact release from go.dev. **openjdk** is the one loose
   pin in the file — `adoptium` holds a feature release (`21`), and the newest
@@ -561,6 +614,8 @@ exists) that sources `shell/init.sh`. That file:
 
 - puts `~/bin`, `~/.local/bin`, and `~/miniforge3/bin` on `PATH`;
 - initialises `starship`, `zoxide`, `atuin`, `direnv`, and `fzf` for bash/zsh;
+- loads notify's hook, so long commands notify when they finish (see
+  [notify](#notify); `TS_NOTIFY_HOOK=0` turns it off);
 - pins `BAT_THEME` so `bat` doesn't probe the terminal for its colours.
 
 **starship and oh-my-zsh themes are mutually exclusive.** starship assigns
@@ -583,8 +638,8 @@ later, re-run `make setup` after it exists to wire your `~/.zshrc`.
 
 ## After installing
 
-`make setup` handles `PATH` and auto-initialises starship/zoxide/atuin/direnv/fzf.
-Seven tools need one manual step:
+`make setup` handles `PATH`, auto-initialises starship/zoxide/atuin/direnv/fzf
+and loads notify's hook. Eight tools need one manual step:
 
 - **delta** does nothing until git is told to use it — add to `~/.gitconfig`:
 
@@ -638,6 +693,18 @@ Seven tools need one manual step:
   needs Settings → General → Selection → "Applications in terminal may access
   clipboard", and GNOME Terminal and other VTE terminals can't. Over mosh, both
   ends need 1.4.0 or later.
+
+- **notify** needs your own terminal to show the notifications. Ghostty,
+  kitty, WezTerm and foot do by default. iTerm2 needs Settings → Profiles →
+  Terminal → "Send Notification Center alerts", then "Filter Alerts" → "Send
+  escape sequence-generated alerts"; Warp needs Settings → Features →
+  Notifications. Alacritty and Terminal.app show none, nor do most GNOME
+  Terminal builds, so set `export NOTIFY_METHOD=bell` on the remote machine;
+  do the same over mosh, which drops the sequences. Over plain SSH most terminals look alike, so
+  `auto` sends OSC 9; if nothing pops up, find the `printf` test in
+  [notify's README](https://github.com/davetang/notify#your-terminal) that
+  works and set `NOTIFY_METHOD` to match. `notify -v hello` says which method
+  it used.
 
 Everything else works the moment it's on `PATH`. Run `make check` to confirm.
 

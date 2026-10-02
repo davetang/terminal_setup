@@ -11,7 +11,7 @@ tools=(bat eza fd rg sd dust duf procs btop delta hyperfine
        starship direnv
        just chezmoi xh tldr lazygit
        shellcheck shfmt ruff
-       gh tea pandoc viddy ollama sendcb trip tt ttyper
+       gh tea pandoc viddy ollama sendcb notify trip tt ttyper
        tmux zsh datamash parallel pv goaccess xclip ncdu vd llm
        tree pigz gls
        screen)
