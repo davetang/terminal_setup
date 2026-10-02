@@ -27,7 +27,7 @@ PIPTOOLS := visidata llm
 SDKTOOLS := go openjdk
 
 .PHONY: help deps check install setup uninstall miniforge freeze \
-        binaries conda-tools pip-tools sdks ollama sendcb notify screen ohmyzsh tldr-pages \
+        binaries conda-tools pip-tools sdks rig ollama sendcb notify screen ohmyzsh tldr-pages \
         $(BINTOOLS) $(CONDATOOLS) $(PIPTOOLS) $(SDKTOOLS)
 
 help: ## Show this help
@@ -37,7 +37,7 @@ help: ## Show this help
 	@echo
 	@echo "  Groups : binaries  conda-tools  pip-tools  sdks"
 	@echo "  Single : make bat   make fzf   make tmux   ...  (any tool name)"
-	@echo "  Extras : make sdks (go, openjdk)   make ohmyzsh   make tldr-pages   — not in 'make install'"
+	@echo "  Extras : make sdks (go, openjdk)   make rig   make ohmyzsh   make tldr-pages   — not in 'make install'"
 	@echo "  Reinst.: FORCE=1 make bat"
 
 deps: ## Preflight: check prerequisites (read-only)
@@ -72,6 +72,9 @@ sdks: $(SDKTOOLS) ## Install the language toolchains (go, openjdk) — not in 'm
 
 $(SDKTOOLS):
 	@$(ROOT)scripts/$@.sh
+
+rig: ## Install rig, the R version manager, in user mode (no R yet) — not in 'make install'
+	@$(ROOT)scripts/rig.sh
 
 ohmyzsh: ## Install Oh My Zsh into ~/.oh-my-zsh and wire it into ~/.zshrc
 	@$(ROOT)scripts/ohmyzsh.sh

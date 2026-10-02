@@ -18,8 +18,11 @@ tools=(bat eza fd rg sd dust duf procs btop delta hyperfine
 
 # Opt-in extras: not part of 'make install', so they are reported separately
 # and left out of the count below — otherwise everyone who skipped them reads
-# a total that says something is wrong.
-extras=(go gofmt java javac)
+# a total that says something is wrong. Each is "command:how to get it". R is
+# rig's to install, not this repo's, so its hint is the next step after rig
+# (and both steps when rig is missing too).
+extras=(go:"make sdks" gofmt:"make sdks" java:"make sdks" javac:"make sdks"
+        rig:"make rig" R:"rig add release")
 
 printf '%-12s %-8s %s\n' TOOL STATUS LOCATION
 printf '%-12s %-8s %s\n' ---- ------ --------
@@ -40,10 +43,19 @@ ok "$present / $total installed"
 echo
 printf '%-12s %-8s %s\n' EXTRA STATUS LOCATION
 printf '%-12s %-8s %s\n' ----- ------ --------
-for t in "${extras[@]}"; do
+rig_ok=
+for e in "${extras[@]}"; do
+  t="${e%%:*}" hint="${e#*:}"
   p="$(command -v "$t" 2>/dev/null)"
+  # Only r-lib's rig counts: Debian's unrelated rig package, a random name and
+  # address generator, puts one in /usr/games.
+  if [[ "$t" == rig && -n "$p" ]]; then
+    if "$p" --version </dev/null 2>/dev/null | grep -q 'R Installation Manager'; then rig_ok=1
+    else p=; fi
+  fi
+  [[ "$t" == R && -z "$rig_ok" ]] && hint="make rig, then rig add release"
   if [[ -n "$p" ]]; then printf '%-12s %s%-8s%s %s\n' "$t" "$_c_green" "ok" "$_c_reset" "$p"
-  else printf '%-12s %s%-8s%s %s\n' "$t" "$_c_yellow" "-" "$_c_reset" "make sdks"; fi
+  else printf '%-12s %s%-8s%s %s\n' "$t" "$_c_yellow" "-" "$_c_reset" "$hint"; fi
 done
 omz="${ZSH:-$HOME/.oh-my-zsh}"
 if [[ -r "$omz/oh-my-zsh.sh" ]]; then

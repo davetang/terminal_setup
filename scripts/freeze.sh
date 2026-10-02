@@ -40,14 +40,18 @@ while IFS=$'\t' read -r name repo re bins; do
   fi
 done < "$ROOTDIR/binaries.tsv"
 
-# ollama is not in binaries.tsv (scripts/ollama.sh installs it client-only out
-# of a zstd bundle), so resolve its tag here.
-tag="$(forge_latest_tag ollama/ollama)"
-if [[ -n "$tag" ]]; then
-  printf 'ollama\tgh\t%s\n' "$tag" >> "$tmp"; ok "ollama -> $tag"
-else
-  warn "ollama: could not resolve tag (left unpinned → latest)"
-fi
+# ollama and rig are not in binaries.tsv (scripts/ollama.sh installs ollama
+# client-only out of a zstd bundle; scripts/rig.sh wraps and configures rig), so
+# resolve their tags here.
+for pair in ollama:ollama/ollama rig:r-lib/rig; do
+  name="${pair%%:*}"
+  tag="$(forge_latest_tag "${pair#*:}")"
+  if [[ -n "$tag" ]]; then
+    printf '%s\tgh\t%s\n' "$name" "$tag" >> "$tmp"; ok "$name -> $tag"
+  else
+    warn "$name: could not resolve tag (left unpinned → latest)"
+  fi
+done
 
 # sendcb and notify publish no releases at all (each is bash on a branch), so
 # their pins are commits rather than tags, and freezing moves them to the newest.

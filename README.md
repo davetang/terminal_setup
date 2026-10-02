@@ -32,11 +32,12 @@ FORCE=1 make bat      # overwrite an existing copy
 make check            # report what is / isn't installed
 ```
 
-Four things sit outside `make install`, because they are large or because they
+Five things sit outside `make install`, because they are large or because they
 write outside `~/bin` rather than adding a binary:
 
 ```sh
 make sdks             # go + openjdk (or: make go / make openjdk)
+make rig              # rig, the R version manager; then 'rig add release' for R
 make ohmyzsh          # oh-my-zsh into ~/.oh-my-zsh, wired into ~/.zshrc
 make tldr-pages       # this repo's tldr pages into tealdeer's custom pages dir
 ```
@@ -55,6 +56,7 @@ Every target works with either `make <target>` or `./run.sh <target>`:
 | `install` | `deps` + everything: binaries, conda tools, pip tools, ollama, sendcb, notify, screen |
 | `binaries` / `conda-tools` / `pip-tools` | install just one group |
 | `sdks` | `go` + `openjdk` — language toolchains, **not** in `install` |
+| `rig` | rig, the R version manager, in user mode (no R until `rig add`) — **not** in `install` |
 | `ohmyzsh` | oh-my-zsh into `~/.oh-my-zsh`, wired into `~/.zshrc` — **not** in `install` |
 | `tldr-pages` | copy [`tldr/`](tldr/) into tealdeer's custom pages dir — **not** in `install` |
 | `<tool>` | install a single tool (e.g. `make fzf`); prefix `FORCE=1` to reinstall |
@@ -151,6 +153,7 @@ reports whether you have them.
 | **screen** (GNU) | terminal multiplexer; 5.x, for 24-bit colour | source (gcc + make) |
 | **go** | the Go toolchain | go.dev tarball — `make sdks` |
 | **openjdk** | Eclipse Temurin JDK (`java`, `javac`, `jar`, `jshell`) | Adoptium — `make sdks` |
+| **rig** | R installation manager: several R versions side by side, no root | binary + wrapper — `make rig` |
 | **oh-my-zsh** | zsh configuration framework | git clone — `make ohmyzsh` |
 
 Binaries download straight from their upstream release page into `~/bin` — GitHub
@@ -168,9 +171,9 @@ bootstraps Miniforge under `~/miniforge3` automatically. `visidata` and `llm`
 are pure Python (`pipx` → `pip --user` → conda fallback). `screen` is the one
 source build — see [GNU Screen 5, built from source](#gnu-screen-5-built-from-source).
 
-The last three rows are opt-in and deliberately outside `make install` — see
-[Language toolchains](#language-toolchains-go-openjdk) and
-[oh-my-zsh](#oh-my-zsh). `coreutils` is worth a word too: it installs
+The last four rows are opt-in and deliberately outside `make install` — see
+[Language toolchains](#language-toolchains-go-openjdk),
+[R, through rig](#r-through-rig) and [oh-my-zsh](#oh-my-zsh). `coreutils` is worth a word too: it installs
 conda-forge's **gnu-coreutils**, which is the same source built with
 `--program-prefix=g`. The unprefixed package would land in `~/miniforge3/bin`,
 which `shell/init.sh` puts ahead of `/usr/bin`, so every `ls`, `cp`, `mv` and
@@ -446,6 +449,88 @@ by default — which is **not** the `~/bin` this repo owns. `shell/init.sh` appe
 it to PATH rather than prepending, so a tool you built yourself never silently
 shadows the curated set.
 
+## R, through rig
+
+[rig](https://github.com/r-lib/rig) is Posit's R installation manager: it
+installs several R versions side by side and switches between them. Opt-in, and
+in two steps, because the second is about 280 MB and a choice of its own:
+
+```sh
+make rig             # or: ./run.sh rig — rig itself, configured; no R yet
+rig add release      # the current R; R and Rscript appear in ~/bin
+rig add 4.5          # the latest 4.5.x, alongside it
+rig default 4.5.3    # switch R and Rscript to it (the exact name 'rig list' shows)
+```
+
+**User mode, so no sudo.** rig defaults to admin mode, which installs into
+`/opt/R` and links into `/usr/local/bin`. `make rig` switches it to user mode
+(new in rig 0.10.0) and sets its `binary-dir` to `~/bin`, so:
+
+| What | Where |
+|------|-------|
+| R versions | `~/.local/share/rig/r/<version>/` |
+| `R`, `Rscript` (the default version), `R-<version>`, `R-release` | symlinks in `~/bin` |
+| packages | `~/R/x86_64-pc-linux-gnu-library/<minor>/` (R's usual user library) |
+| rig's settings | `~/.local/share/rig/config.json` |
+
+`rig system dirs` prints all of it; `Mode user` and `Binary dir ~/bin` are the
+two lines to check. `make check` lists `rig` and `R` among the extras.
+
+**Why `~/bin/rig` is a script.** In user mode, every rig command that makes
+links (`add`, `rm`, `default`, aliases) appends `. "$HOME/.local/bin/rigenv"` to
+whichever of `~/.profile`, `~/.bash_profile`, `~/.bashrc`, `~/.zprofile` and
+`~/.zshrc` exist, writes that `rigenv` file, and, if `~/.config/fish` exists,
+adds a snippet to fish's `conf.d`. It does this unless `~/.local/bin` is on
+`PATH` ahead of `/usr/local/bin`. rig's docs say setting `binary-dir` stops it,
+but the check (`check_local_bin_path` in rig's `src/utils.rs`) never looks at
+`binary-dir`. So the real binary lives in `~/bin/rig-<version>/`, and
+`~/bin/rig` is a wrapper that puts `~/.local/bin` first on `PATH` for rig's own
+process only. That passes rig's check, your shell's `PATH` stays as it was, and
+no rc file is touched. Upstream's `install.sh` isn't used for the same reason: it edits your
+profiles too.
+
+**It needs glibc 2.34 or newer for R.** User mode installs Posit's portable R
+builds (`manylinux_2_34`); `rig` itself is static and runs anywhere. On an older
+host `make rig` still installs rig, but warns, and `rig add` refuses. Run R from
+a container there instead (Apptainer with a `rocker/r-ver` image).
+
+**Packages come as binaries, so no compiler.** rig points R at Posit Package
+Manager's portable Linux binaries, so `install.packages()` unpacks CRAN builds,
+system libraries and all (sf brings its own GEOS, GDAL and PROJ). Bioconductor
+is the exception: rig's default Bioconductor repositories are source-only. Add
+this to `~/.Rprofile` and `BiocManager::install()` gets binaries too:
+
+```r
+options(BioC_mirror = "https://packagemanager.posit.co/bioconductor/__linux__/manylinux_2_28/latest")
+```
+
+rig installs pak into each new R, but not BiocManager, so the first time round
+it's `install.packages("BiocManager")`.
+
+Two things still want build tools. `install.packages(..., Ncpus = 4)` runs its
+installs through `make -j`, so it fails with `make: not found` on a host with
+no `make`. And a package that only comes as source needs `gcc`, `g++` and
+`gfortran`.
+
+A few other things to know:
+
+- **Upgrading rig**: `versions.lock` pins it (channel `gh`) like any other
+  release, so move the pin (edit the `rig` line, or `make freeze`), then
+  `FORCE=1 make rig`. `rig self update` refuses, because it only replaces
+  copies that rig's own install script put there. Your R versions are rig's to
+  manage and are not pinned here.
+- **Downloads** go to `/tmp/rig-<uid>`. On a shared host with a small `/tmp`,
+  `rig config set download-dir=$HOME/.cache/rig/downloads`.
+- **A rig you already have** doesn't stop `make rig`: only its own wrapper in
+  `~/bin` counts as installed. `~/bin/rig` then shadows a system rig such as
+  `/usr/local/bin/rig`, and Debian's unrelated `/usr/games/rig` (a random name
+  generator). User mode is a per-user setting, so a system rig you run by its
+  full path uses it too. A `~/.local/bin/rig` from upstream's `install.sh` would
+  still win, because `shell/init.sh` puts `~/.local/bin` first; `make rig`
+  warns if it finds one.
+- **Uninstalling** removes rig and leaves R in place, still working. `rig rm
+  <version>` removes one version while rig is still installed.
+
 ## oh-my-zsh
 
 ```sh
@@ -504,6 +589,7 @@ scripts/sendcb.sh              fetch the sendcb script at its pinned commit
 scripts/notify.sh              fetch notify and its shell hook at their pinned commit
 scripts/screen.sh              build GNU Screen 5 from source, linked against Miniforge
 scripts/{go,openjdk}.sh        vendor tarballs → ~/bin/<name>-<version>/ (make sdks)
+scripts/rig.sh                 rig in user mode, behind a wrapper that keeps it out of your rc files
 scripts/ohmyzsh.sh             clone oh-my-zsh and wire it into ~/.zshrc
 scripts/tldr_pages.sh          copy tldr/ into tealdeer's custom pages dir
 scripts/setup_shell.sh         wire the shell rc
@@ -714,8 +800,11 @@ Everything else works the moment it's on `PATH`. Run `make check` to confirm.
 make uninstall   # removes the ~/bin binaries this repo installed
 ```
 
-That includes `screen`, `go` and the JDK, along with their `~/bin/screen-<version>/`,
-`~/bin/go-<version>/` and `~/bin/jdk-<release>/` trees.
+That includes `screen`, `go`, the JDK and `rig`, along with their
+`~/bin/screen-<version>/`, `~/bin/go-<version>/`, `~/bin/jdk-<release>/` and
+`~/bin/rig-<version>/` trees. R itself stays: it is rig's, it runs without rig,
+and the uninstall prints the one `rm -rf` that removes it, should you want that
+too.
 
 Conda tools (`tree`, `pigz` and `coreutils` among them), `visidata`, `llm`,
 Miniforge, `~/.oh-my-zsh` and your rc edits are left untouched (`pipx uninstall
@@ -737,7 +826,7 @@ Deliberately **not** installed:
   are actually used; `nvm`, `lua` and `luarocks` are still in
   [`install_scripts`](https://github.com/davetang/install_scripts). `go` and
   `openjdk` are here because they are general toolchains rather than editor
-  plumbing, and even they are opt-in.
+  plumbing, and even they are opt-in. So is R, through [rig](#r-through-rig).
 
 To add any of them, drop a row in `binaries.tsv` (if it ships a Linux binary) or
 `conda install -c conda-forge <pkg>`.

@@ -26,6 +26,7 @@ for more examples once installed.
 - [Disk usage (ncdu)](#disk-usage-ncdu)
 - [GNU coreutils, g-prefixed](#gnu-coreutils-g-prefixed)
 - [Language toolchains (go, openjdk)](#language-toolchains-go-openjdk)
+- [R versions (rig)](#r-versions-rig)
 - [Housekeeping](#housekeeping)
 
 ## Coreutils replacements
@@ -619,12 +620,37 @@ $JAVA_HOME/bin/jshell                     # the rest of the JDK lives here
 never shadow the curated set. `java` finds its own JDK; `JAVA_HOME` exists for
 Maven, Gradle and sbt, which look it up instead of asking `java`.
 
+## R versions (rig)
+
+Not part of `make install`. `make rig` installs rig in user mode; R comes after,
+from rig. Needs glibc 2.34+ for the R builds.
+
+```sh
+rig add release             # current R, ~280 MB; R and Rscript land in ~/bin
+rig add 4.5                 # latest 4.5.x alongside it (also: oldrel, devel)
+rig list                    # installed versions; * marks the default
+rig default 4.5.3           # what R and Rscript now run (exact name from rig list)
+R-4.6.1                     # one version, without switching the default
+rig rm 4.5.3
+rig system dirs             # expect "Mode user" and "Binary dir ~/bin"
+
+# CRAN comes as binaries out of the box; for Bioconductor binaries, ~/.Rprofile:
+#   options(BioC_mirror = "https://packagemanager.posit.co/bioconductor/__linux__/manylinux_2_28/latest")
+Rscript -e 'install.packages("BiocManager")'   # rig installs pak, not this
+Rscript -e 'BiocManager::install("DESeq2")'
+```
+
+`~/bin/rig` is a wrapper, so rig never appends its `rigenv` line to your rc
+files. To upgrade rig, move its pin in `versions.lock`, then `FORCE=1 make rig`;
+`rig self update` refuses here.
+
 ## Housekeeping
 
 ```sh
 make check        # what's installed and where (extras listed separately)
 FORCE=1 make eza  # reinstall / upgrade a single tool to latest
 make sdks         # go + openjdk, the opt-in toolchains
+make rig          # rig, then 'rig add release' for R
 make ohmyzsh      # oh-my-zsh into ~/.oh-my-zsh, wired into ~/.zshrc
 make tldr-pages   # this repo's examples into tldr: tldr ncdu, tldr csvtk
 make uninstall    # remove the ~/bin binaries this repo installed
