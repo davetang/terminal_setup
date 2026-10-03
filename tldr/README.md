@@ -5,7 +5,7 @@ Per-tool examples for [tealdeer](https://github.com/tealdeer-rs/tealdeer), the
 [`cheatsheet.md`](../cheatsheet.md), but delivered where you actually reach for
 it: `tldr <tool>`.
 
-One file per tool in this repo's set — 60 of them, matching `make check`.
+One file per tool in this repo's set — 61 of them, matching `make check`.
 
 ## Does the name need `.patch`? Yes, and it changes the behaviour
 
@@ -26,20 +26,20 @@ what upstream publishes:
 - **51 tools have an upstream page** → `<command>.patch.md`, holding only the
   extra examples this setup adds (the marker line `- terminal-setup extras`
   shows where upstream ends).
-- **9 have none to attach to** → `<command>.page.md`, a complete page: `csvtk`,
-  `seqkit`, `viddy`, `ttyper`, `sendcb`, `notify`, `vd`, `gls`, `rig`.
+- **10 have none to attach to** → `<command>.page.md`, a complete page: `csvtk`,
+  `seqkit`, `viddy`, `ttyper`, `sendcb`, `notify`, `showimg`, `vd`, `gls`, `rig`.
 
 Checked against tldr-pages, not assumed: `csvtk`, `seqkit`, `viddy`, `ttyper`,
-`sendcb` and `notify` have no page at all, and visidata is published under
-neither `vd` nor `visidata`. Re-check with `tldr <command>` after a `tldr --update`.
+`sendcb`, `notify` and `showimg` have no page at all, and visidata is published
+under neither `vd` nor `visidata`. Re-check with `tldr <command>` after a `tldr --update`.
 
-`gls` is the eighth for a different reason: upstream *does* publish it, but only
+`gls` is the ninth for a different reason: upstream *does* publish it, but only
 under the `osx` platform, because g-prefixed coreutils are normally a macOS
 thing. On Linux that page is not in the platform directories tealdeer searches,
 so a patch would have nothing to attach to — hence a full page. It stands in
 for the whole g-prefixed set `make coreutils` installs, not just `gls`.
 
-`rig` is the ninth for a third reason: upstream's `linux/rig` page is for a
+`rig` is the tenth for a third reason: upstream's `linux/rig` page is for a
 different program, a random name and address generator (Debian's `rig`
 package). A patch would append R examples to that tool's page; a full page
 replaces it, which is what `tldr rig` should show once `make rig` has installed

@@ -23,6 +23,7 @@ for more examples once installed.
 - [Shell & multiplexer](#shell--multiplexer)
 - [Clipboard (sendcb, xclip)](#clipboard-sendcb-xclip)
 - [Notifications (notify)](#notifications-notify)
+- [Images (showimg)](#images-showimg)
 - [Disk usage (ncdu)](#disk-usage-ncdu)
 - [GNU coreutils, g-prefixed](#gnu-coreutils-g-prefixed)
 - [Language toolchains (go, openjdk)](#language-toolchains-go-openjdk)
@@ -546,6 +547,38 @@ printf '\e]9;hello from OSC 9\a'
 printf '\e]777;notify;notify;hello from OSC 777\a'
 # needs a terminal attached: nothing reaches you from cron, sbatch or a
 # detached tmux session. iTerm2 and Warp have notifications off by default.
+```
+
+## Images (showimg)
+
+`showimg` draws an image in the terminal you are *sitting at*, over SSH and
+through tmux or screen, the way `sendcb` reaches its clipboard. PNG needs
+nothing else; PDF, SVG and JPEG need a converter (`pdftoppm`, `rsvg-convert`
+or ImageMagick) where it runs, and it says which.
+
+```sh
+showimg plot.png                      # below the command, as wide as the window allows
+showimg -r 20 heatmap.pdf             # at most 20 rows tall; first page of a PDF
+showimg figures/*.png                 # one after another, each under its name
+curl -s https://example.com/logo.png | showimg   # from standard input
+showimg -v plot.png                   # say which protocol and size: kitty, iterm, sixel
+showimg -p text plot.png              # coloured characters: any terminal, mosh (needs chafa)
+
+# pairs with the rest of the setup
+fd -e png -X showimg -r 15            # every PNG below here, 15 rows each
+Rscript -e 'png("cars.png", width = 7, height = 5, units = "in", res = 150); plot(cars); invisible(dev.off())'
+showimg cars.png                      # R from rig; res = 150 looks sharper than the default
+
+# inside tmux it needs allow-passthrough, or tmux drops the image (it stops and says so)
+tmux set -g allow-passthrough on      # running server; keep 'set -gq allow-passthrough on' in ~/.tmux.conf
+# inside screen it can't ask the terminal, so it tries kitty's protocol
+# (kitty, Ghostty, Warp); for iTerm2 or WezTerm, in ~/.bashrc or ~/.zshrc:
+if [ -n "${STY:-}" ]; then export SHOWIMG_PROTOCOL=iterm; fi
+
+# test the terminal on its own, outside tmux and screen: a red rectangle
+printf '\e_Ga=T,f=24,s=1,v=1,c=10,r=5;/wAA\e\\\n'   # kitty protocol
+# drawn over the text, and nothing redraws it: switching tmux windows or
+# scrolling can wipe it. Run it again, or clear.
 ```
 
 ## Disk usage (ncdu)

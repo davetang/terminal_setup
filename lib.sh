@@ -102,7 +102,7 @@ forge_latest_tag() {
 
 # forge_latest_commit <repo>: print the full SHA of the newest commit on the
 # default branch — the pin for a tool that publishes no releases (sendcb,
-# notify).
+# notify, showimg).
 # GitHub only: Gitea has no commits/HEAD endpoint. The commit's own sha is the
 # first one in the response; the tree and parent SHAs follow it.
 forge_latest_commit() {

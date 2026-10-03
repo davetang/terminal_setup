@@ -53,7 +53,7 @@ Every target works with either `make <target>` or `./run.sh <target>`:
 | Target | Does |
 |--------|------|
 | `deps` | read-only preflight (checks prerequisites) |
-| `install` | `deps` + everything: binaries, conda tools, pip tools, ollama, sendcb, notify, screen |
+| `install` | `deps` + everything: binaries, conda tools, pip tools, ollama, sendcb, notify, showimg, screen |
 | `binaries` / `conda-tools` / `pip-tools` | install just one group |
 | `sdks` | `go` + `openjdk` — language toolchains, **not** in `install` |
 | `rig` | rig, the R version manager, in user mode (no R until `rig add`) — **not** in `install` |
@@ -137,6 +137,7 @@ reports whether you have them.
 | **ollama** | CLI for an Ollama server (**client only**) | binary |
 | **sendcb** | copy to your *own* clipboard from any shell, over SSH too (OSC 52) | script, pinned commit |
 | **notify** | desktop notification on your *own* machine from any shell, over SSH too; a hook for long commands | script, pinned commit |
+| **showimg** | show a plot or image in your *own* terminal from any shell, over SSH too | script, pinned commit |
 | **tmux** | terminal multiplexer | conda-forge |
 | **zsh** | the shell | conda-forge |
 | **datamash** | group-by statistics | conda-forge |
@@ -161,8 +162,9 @@ for all but `tea`, which Gitea develops on gitea.com (see
 [Tools not on GitHub](#tools-not-on-github)) — pinned to the versions in
 `versions.lock` (see [Reproducibility](#reproducibility-version-pinning)).
 `ollama` is the odd one out — see [ollama, client only](#ollama-client-only).
-`sendcb` and `notify` are bash scripts with no releases, so they are fetched at
-a pinned commit — see [sendcb](#sendcb) and [notify](#notify).
+`sendcb`, `notify` and `showimg` are bash scripts with no releases, so they are
+fetched at a pinned commit — see [sendcb](#sendcb), [notify](#notify) and
+[showimg](#showimg).
 `tmux`, `zsh`, `datamash`, `parallel`, `pv`, `goaccess`, `xclip`, `ncdu`,
 `tree`, `pigz` and `coreutils` have no static binary this setup can fetch (see
 [Tools not on GitHub](#tools-not-on-github) for `ncdu`), so they come from
@@ -349,6 +351,44 @@ Set the last three below the `terminal-setup` block. The hook needs bash 4.4 or
 later (RHEL 7's 4.2 doesn't qualify) and skips itself in older bash; `notify`
 itself still works there. Your own terminal has to show the notifications: see
 [After installing](#after-installing).
+
+## showimg
+
+[`showimg`](https://github.com/davetang/showimg) is the third of the set: it
+shows an image in the terminal you're **sitting at**, from a shell on any
+machine you've SSHed into, tmux and GNU screen included:
+
+```sh
+showimg plot.png   # on the remote machine
+                   # the plot appears in your terminal, below the command
+```
+
+It sends the image as an escape sequence, in whichever of the **kitty graphics
+protocol**, **iTerm2 inline images** or **sixel** your terminal understands.
+Like sendcb's OSC 52, it travels over the SSH connection you already have: no
+`scp`, no X11 forwarding, nothing installed on your own machine. It asks the
+terminal which one it speaks; where it can't ask, inside GNU screen or tmux
+older than 3.3, it tries kitty's, which kitty, Ghostty and Warp use.
+
+PNG needs nothing but coreutils and awk. PDF, SVG, JPEG and other formats need
+a converter where `showimg` runs (`pdftoppm`, `rsvg-convert` or ImageMagick),
+and `showimg -p text`, for terminals that can't show images, needs `chafa`.
+This repo installs none of them, and `showimg` names the one it's missing.
+
+```sh
+make showimg            # or: ./run.sh showimg (also run by make install)
+FORCE=1 make showimg    # reinstall at the pinned commit
+```
+
+**Pinned to a commit**, the same way as [sendcb](#sendcb): no releases, so
+`versions.lock` holds a commit SHA under `git`, and `scripts/showimg.sh`
+fetches the script from that commit on raw.githubusercontent.com.
+
+**Upstream's `setup.sh` is not run.** It copies `showimg` to `~/bin`, which
+this does too; adds `~/bin` to `PATH`, which `make setup` already does; and
+edits `~/.tmux.conf`, which is left to you. showimg needs one line there: see
+[After installing](#after-installing). The rest of `setup.sh` only reports on
+screen, mosh and the converters it finds.
 
 ## GNU Screen 5, built from source
 
@@ -587,6 +627,7 @@ scripts/{visidata,llm}.sh      pipx / pip / conda installs
 scripts/ollama.sh              stream the ollama CLI out of upstream's bundle
 scripts/sendcb.sh              fetch the sendcb script at its pinned commit
 scripts/notify.sh              fetch notify and its shell hook at their pinned commit
+scripts/showimg.sh             fetch the showimg script at its pinned commit
 scripts/screen.sh              build GNU Screen 5 from source, linked against Miniforge
 scripts/{go,openjdk}.sh        vendor tarballs → ~/bin/<name>-<version>/ (make sdks)
 scripts/rig.sh                 rig in user mode, behind a wrapper that keeps it out of your rc files
@@ -650,6 +691,7 @@ bat         gh             v0.26.1
 delta       gh             0.19.2
 sendcb      git            47de976ade1bca10a5a1fd0d4bf1104c68b0bed5
 notify      git            1d37c3ea2841612a661efc6f83e5f18b007fc9e0
+showimg     git            b98fdd27c839e6e54fb22467413687be48abc51d
 tmux        conda          3.7b_
 visidata    pip            3.4
 llm         pip            0.31.1
@@ -660,9 +702,9 @@ openjdk     adoptium       21
 
 - **Forge tools** (GitHub or Gitea) install from `releases/tags/<tag>` (the
   exact tag), not `latest`; the `gh` channel in the lockfile means "a release
-  tag", not necessarily github.com. **sendcb** and **notify** have no
-  releases, so `git` holds a commit SHA and their files are fetched from that
-  commit. **conda/pip tools** install `pkg=version`.
+  tag", not necessarily github.com. **sendcb**, **notify** and **showimg**
+  have no releases, so `git` holds a commit SHA and their files are fetched
+  from that commit. **conda/pip tools** install `pkg=version`.
   **screen** builds that version's source tarball from ftp.gnu.org (`gnu`).
   **go** takes that exact release from go.dev. **openjdk** is the one loose
   pin in the file — `adoptium` holds a feature release (`21`), and the newest
@@ -725,7 +767,7 @@ later, re-run `make setup` after it exists to wire your `~/.zshrc`.
 ## After installing
 
 `make setup` handles `PATH`, auto-initialises starship/zoxide/atuin/direnv/fzf
-and loads notify's hook. Eight tools need one manual step:
+and loads notify's hook. Nine tools need one manual step:
 
 - **delta** does nothing until git is told to use it — add to `~/.gitconfig`:
 
@@ -791,6 +833,22 @@ and loads notify's hook. Eight tools need one manual step:
   [notify's README](https://github.com/davetang/notify#your-terminal) that
   works and set `NOTIFY_METHOD` to match. `notify -v hello` says which method
   it used.
+
+- **showimg** inside tmux needs `set -gq allow-passthrough on` in
+  `~/.tmux.conf` (the `-q` keeps tmux older than 3.3, which has no such option,
+  from complaining). tmux's default, `off`, drops the image, and showimg stops
+  with the fix; `tmux set -g allow-passthrough on` applies it to a running
+  server. It also lets any program in the pane you're looking at send your
+  terminal sequences tmux would otherwise filter, as it could without tmux.
+  On your own machine the terminal has to show images: Warp, kitty, Ghostty,
+  iTerm2 and WezTerm do as they are, and VS Code needs
+  `terminal.integrated.enableImages` on. Alacritty, Terminal.app and GNOME
+  Terminal can't, and mosh can't carry images, so use `showimg -p text` there
+  (needs `chafa`). Inside GNU screen showimg can't ask the terminal and tries
+  kitty's protocol, so for iTerm2 or WezTerm set `SHOWIMG_PROTOCOL=iterm`
+  inside screen only, as
+  [showimg's README](https://github.com/davetang/showimg#gnu-screen) shows.
+  `showimg -v plot.png` says which protocol and size it used.
 
 Everything else works the moment it's on `PATH`. Run `make check` to confirm.
 
