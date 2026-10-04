@@ -17,6 +17,7 @@ ROOTDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 : "${BIN:=$PREFIX/bin}"
 : "${FORCE:=0}"
 : "${LOCKFILE:=$ROOTDIR/versions.lock}"
+: "${RECORDFILE:=$BIN/.installed.lock}"   # what was installed; see record_install
 
 # Per-process scratch dir, cleaned up on exit.
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/termsetup.XXXXXX")"
@@ -121,13 +122,79 @@ gnu_latest_version() {
     | sort -uV | tail -1
 }
 
+# _release_tag <url>: print the tag in a release asset's download URL, which
+# reads .../releases/download/<tag>/<asset> on GitHub and Gitea alike. An
+# unpinned install learns the tag it got this way. Prints nothing for any other
+# URL shape.
+_release_tag() {
+  local u="$1"
+  [[ "$u" == */releases/download/*/* ]] || return 0
+  u="${u%/*}"; u="${u##*/}"
+  printf '%b\n' "${u//%/\\x}"   # undo percent-encoding (a '+' arrives as %2B)
+}
+
+# conda_latest_version <pkg>, pypi_latest_version <pkg>, go_latest_version,
+# adoptium_latest_release <feature>: print the newest upstream version, for
+# 'make freeze' and 'UPSTREAM=1 make outdated'. Print nothing if unreachable.
+conda_latest_version() {
+  curl -fsSL "https://api.anaconda.org/package/conda-forge/$1" \
+    | python3 -c 'import sys,json; print(json.load(sys.stdin).get("latest_version",""))' 2>/dev/null
+}
+pypi_latest_version() {
+  curl -fsSL "https://pypi.org/pypi/$1/json" \
+    | python3 -c 'import sys,json; print(json.load(sys.stdin)["info"]["version"])' 2>/dev/null
+}
+go_latest_version() {
+  curl -fsSL "https://go.dev/dl/?mode=json" \
+    | python3 -c 'import sys,json; print(next(r["version"] for r in json.load(sys.stdin) if r.get("stable")))' 2>/dev/null
+}
+# The newest Temurin patch of a feature release (jdk-21.0.12.1+1), which is
+# what scripts/openjdk.sh installs. Same platform as that script: linux/x64.
+adoptium_latest_release() {
+  curl -fsSL "https://api.adoptium.net/v3/assets/latest/$1/hotspot?os=linux&architecture=x64&image_type=jdk" \
+    | python3 -c 'import sys,json; r=json.load(sys.stdin); print(r[0]["release_name"] if r else "")' 2>/dev/null
+}
+
+# _tsv_get <file> <name> <channel>: print the version column of the row for
+# <name> in <channel>, from versions.lock or a file in its format.
+_tsv_get() {
+  [[ -f "$1" ]] || return 0
+  awk -F'\t' -v n="$2" -v c="$3" \
+    '!/^[[:space:]]*#/ && NF>=3 && $1==n && $2==c {print $3; exit}' "$1"
+}
+
 # lock_get <name> <channel>: print the pinned version/tag for <name> in
 # <channel> (gh|git|conda|pip|gnu|go|adoptium) from versions.lock, or nothing if unpinned.
-lock_get() {
-  [[ -f "$LOCKFILE" ]] || return 0
-  awk -F'\t' -v n="$1" -v c="$2" \
-    '!/^[[:space:]]*#/ && NF>=3 && $1==n && $2==c {print $3; exit}' "$LOCKFILE"
+lock_get() { _tsv_get "$LOCKFILE" "$1" "$2"; }
+
+# --- install record ----------------------------------------------------------
+# Every installer that puts a tool in $BIN notes the version it put there in
+# $RECORDFILE (~/bin/.installed.lock), in versions.lock's own columns, so
+# 'make outdated' can set the two side by side without running every tool to
+# ask. The record lives beside what it describes: another BIN gets its own.
+# conda and pip tools aren't recorded; their package managers already know.
+
+# record_install <name> <channel> <version>: record <version> for <name>,
+# replacing any earlier line for it. Does nothing without a version.
+record_install() {
+  local f="$RECORDFILE" tmp="$TMP/installed.lock"
+  [[ -n "$3" ]] || return 0
+  {
+    if [[ -s "$f" ]]; then
+      awk -F'\t' -v n="$1" '$1 != n' "$f"
+    else
+      echo "# installed.lock — what terminal-setup installed in this directory, written"
+      echo "# by its installers and read by 'make outdated'. Columns as in versions.lock:"
+      echo "# name <TAB> channel <TAB> version-or-tag. openjdk holds the exact Temurin"
+      echo "# release where versions.lock holds only its feature release."
+    fi
+    printf '%s\t%s\t%s\n' "$1" "$2" "$3"
+  } > "$tmp" && mv "$tmp" "$f"
 }
+
+# installed_get <name> <channel>: print the recorded version of <name>, or
+# nothing if it was installed before the record existed (or not by this repo).
+installed_get() { _tsv_get "$RECORDFILE" "$1" "$2"; }
 
 # --- extraction (no unzip/bzip2/xz needed; Python fills the gaps) ------------
 # _extract <file> <destdir>: extract an archive. Returns 1 if <file> is not a
@@ -202,6 +269,7 @@ install_binary() {
     _check_libc "$BIN/$first"
     ok "$first -> $BIN/$first"
   fi
+  record_install "$name" gh "${tag:-$(_release_tag "$url")}"
   log "$name done  (${url##*/})"
 }
 

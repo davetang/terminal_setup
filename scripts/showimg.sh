@@ -42,4 +42,5 @@ bash -n "$f" || die "showimg: $REPO@${sha:0:7}:showimg does not parse"
 
 install -m 0755 "$f" "$BIN/showimg"
 ok "showimg -> $BIN/showimg ($REPO@${sha:0:7})"
+record_install showimg git "$sha"
 log "showimg done — inside tmux it needs 'set -gq allow-passthrough on' (see README.md)"

@@ -30,6 +30,7 @@ Install or reinstall a single tool:
 make bat              # or: ./run.sh bat
 FORCE=1 make bat      # overwrite an existing copy
 make check            # report what is / isn't installed
+make outdated         # report what isn't at its pin, and the command to fix it
 ```
 
 Five things sit outside `make install`, because they are large or because they
@@ -63,6 +64,7 @@ Every target works with either `make <target>` or `./run.sh <target>`:
 | `freeze` | pin every tool's current version → `versions.lock` |
 | `setup` | wire `~/bin` + tool init into your shell rc |
 | `check` | report what's installed and where |
+| `outdated` | report tools not at their `versions.lock` pin and how to fix each; `UPSTREAM=1` also shows pins behind upstream |
 | `uninstall` | remove the `~/bin` binaries this repo installed |
 | `miniforge` | bootstrap Miniforge under `~/miniforge3` |
 | `help` | list all targets |
@@ -673,6 +675,7 @@ scripts/ohmyzsh.sh             clone oh-my-zsh and wire it into ~/.zshrc
 scripts/tldr_pages.sh          copy tldr/ into tealdeer's custom pages dir
 scripts/setup_shell.sh         wire the shell rc
 scripts/status.sh              back the check target
+scripts/outdated.sh            back the outdated target
 scripts/uninstall.sh           remove installed ~/bin binaries
 shell/init.sh                  PATH + tool init, sourced by your shell rc
 README.md · cheatsheet.md      this guide + per-tool usage examples
@@ -755,13 +758,36 @@ openjdk     adoptium       21
   make freeze     # or: ./run.sh freeze  — rewrites versions.lock
   ```
 
+- **See what's out of date**, and the command that fixes each one:
+
+  ```sh
+  make outdated               # what's installed vs versions.lock
+  UPSTREAM=1 make outdated    # ...and vs each tool's newest release
+  ```
+
+  One row per tool, then the commands: `FORCE=1 make eza zsh` for the tools
+  that aren't at their pin, and for pins behind upstream (`UPSTREAM=1` only)
+  `make freeze` followed by `FORCE=1 make yq lazygit`, naming only the tools
+  not already at the newest. It changes nothing itself.
+
+  Every installer that writes to `~/bin` records what it installed in
+  `~/bin/.installed.lock`, in `versions.lock`'s columns, and that record is the
+  installed side. conda tools come from `conda list` instead and pip tools from
+  their `--version`. A tool installed before the record existed is asked for
+  its `--version` and shown with a `~`; only its first dotted number is
+  compared, and `FORCE=1 make <tool>` records it exactly. `sendcb`, `notify`,
+  `showimg` and `termcheck` print no version, so a copy with no record is
+  compared byte for byte with the pinned commit's file. A tool on `PATH` that
+  this repo didn't install (a distro's `jq`) is listed as `elsewhere` and is
+  neither run nor compared, the same way `make install` leaves it alone.
 - **Unpin** one tool by deleting its line (it falls back to latest); delete the
   whole file to unpin everything.
 - **Commit `versions.lock`** to reproduce the exact same tool set on another
   machine or later in time.
 
-Because a full install (or freeze) makes ~40 GitHub API calls and the
-unauthenticated limit is 60/hour, `export GITHUB_TOKEN=...` if you hit it.
+Because a full install (or freeze, or `UPSTREAM=1 make outdated`) makes ~40
+GitHub API calls and the unauthenticated limit is 60/hour,
+`export GITHUB_TOKEN=...` if you hit it.
 
 **Adding a tool** is one line in `binaries.tsv`:
 
@@ -772,7 +798,7 @@ name<TAB>host/owner/repo<TAB>asset-regex<TAB>[binaries]    # Gitea host
 
 then add `name` to `BINTOOLS` in the `Makefile` (and `run.sh`), and to the lists
 in `scripts/status.sh` and `scripts/uninstall.sh` so `make check` and
-`make uninstall` know about it.
+`make uninstall` know about it. `make outdated` reads `binaries.tsv` itself.
 
 ## Shell integration
 

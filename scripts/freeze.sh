@@ -68,16 +68,14 @@ done
 
 log "resolving conda-forge versions…"
 for p in tmux zsh datamash parallel pv goaccess xclip ncdu tree pigz gnu-coreutils; do
-  v="$(curl -fsSL "https://api.anaconda.org/package/conda-forge/$p" \
-        | python3 -c 'import sys,json; print(json.load(sys.stdin).get("latest_version",""))' 2>/dev/null)"
+  v="$(conda_latest_version "$p")"
   if [[ -n "$v" ]]; then printf '%s\tconda\t%s\n' "$p" "$v" >> "$tmp"; ok "$p -> $v"
   else warn "$p: conda version unresolved (left unpinned)"; fi
 done
 
 log "resolving PyPI versions…"
 for p in visidata llm; do
-  v="$(curl -fsSL "https://pypi.org/pypi/$p/json" \
-        | python3 -c 'import sys,json; print(json.load(sys.stdin)["info"]["version"])' 2>/dev/null)"
+  v="$(pypi_latest_version "$p")"
   if [[ -n "$v" ]]; then printf '%s\tpip\t%s\n' "$p" "$v" >> "$tmp"; ok "$p -> $v"
   else warn "$p: PyPI version unresolved (left unpinned)"; fi
 done
@@ -90,8 +88,7 @@ else warn "screen: GNU release unresolved (left unpinned → latest)"; fi
 # The two language toolchains are opt-in ('make sdks'), but pin them anyway:
 # a lockfile that only covers what you happened to install is not a lockfile.
 log "resolving language toolchains…"
-v="$(curl -fsSL "https://go.dev/dl/?mode=json" \
-      | python3 -c 'import sys,json; print(next(r["version"] for r in json.load(sys.stdin) if r.get("stable")))' 2>/dev/null)"
+v="$(go_latest_version)"
 if [[ -n "$v" ]]; then printf 'go\tgo\t%s\n' "$v" >> "$tmp"; ok "go -> $v"
 else warn "go: go.dev version unresolved (left unpinned → latest)"; fi
 

@@ -101,6 +101,7 @@ for b in "${BINS[@]}"; do
   fi
 done
 _check_libc "$BIN/java"
+record_install openjdk adoptium "$release"
 
 ok "$("$BIN/java" -version 2>&1 | head -1)  (JAVA_HOME $dest)"
 log "openjdk done — export JAVA_HOME=$dest for Maven/Gradle; see shell/init.sh"

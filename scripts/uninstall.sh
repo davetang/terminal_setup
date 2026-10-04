@@ -2,7 +2,8 @@
 # uninstall.sh — remove the ~/bin binaries this repo installed.
 # screen, go and the JDK are symlinks into their own prefixes under ~/bin
 # (screen-<version>/, go-<version>/, jdk-<release>/), and rig is a wrapper
-# around ~/bin/rig-<version>/rig; those trees go too.
+# around ~/bin/rig-<version>/rig; those trees go too, and so does the install
+# record, ~/bin/.installed.lock, which describes only what was in ~/bin.
 # Leaves conda tools (tree, pigz, coreutils among them), pip tools (visidata,
 # llm), Miniforge, ~/.oh-my-zsh and rc edits alone, and the R versions rig
 # installed: they are rig's, and they run without it.
@@ -25,6 +26,7 @@ done
 for d in "$BIN"/screen-[0-9]*/ "$BIN"/go-[0-9]*/ "$BIN"/jdk-[0-9]*/ "$BIN"/rig-[0-9]*/; do
   if [[ -d "$d" ]]; then rm -rf "$d"; ok "removed ${d%/}"; fi
 done
+[[ -f "$RECORDFILE" ]] && { rm -f "$RECORDFILE"; ok "removed $RECORDFILE"; }
 log "removed $n binaries from $BIN"
 warn "conda tools, visidata, llm, Miniforge and rc edits were left in place"
 warn "oh-my-zsh was left in ${ZSH:-$HOME/.oh-my-zsh} — 'uninstall_oh_my_zsh' removes it and restores ~/.zshrc"

@@ -106,6 +106,7 @@ make -C "$src" install > "$TMP/install.log" 2>&1 \
 ln -sfn "$dest/bin/screen" "$BIN/screen"
 _check_libc "$BIN/screen"
 ok "screen $(screen_version "$BIN/screen") -> $BIN/screen  (built into $dest)"
+record_install screen gnu "$ver"
 
 # shell/init.sh puts ~/miniforge3/bin ahead of ~/bin, so a conda-forge screen
 # (4.8.0) left in there would still be the one your shell runs.

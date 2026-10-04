@@ -700,7 +700,9 @@ files. To upgrade rig, move its pin in `versions.lock`, then `FORCE=1 make rig`;
 
 ```sh
 make check        # what's installed and where (extras listed separately)
-FORCE=1 make eza  # reinstall / upgrade a single tool to latest
+make outdated     # what isn't at its versions.lock pin, and the command to fix it
+UPSTREAM=1 make outdated   # ...and which pins are behind the newest release
+FORCE=1 make eza  # reinstall a single tool at its pin
 make sdks         # go + openjdk, the opt-in toolchains
 make rig          # rig, then 'rig add release' for R
 make ohmyzsh      # oh-my-zsh into ~/.oh-my-zsh, wired into ~/.zshrc

@@ -107,6 +107,7 @@ set -o pipefail
 [[ -s "$d/$MEMBER" ]] || die "ollama: could not extract $MEMBER from ${url##*/} (download interrupted, or the bundle layout changed)"
 install -m 0755 "$d/$MEMBER" "$BIN/ollama"
 ok "ollama -> $BIN/ollama ($(du -h "$BIN/ollama" | cut -f1), client only — no serve runners)"
+record_install ollama gh "${tag:-$(_release_tag "$url")}"
 
 ver="$("$BIN/ollama" --version 2>&1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)" || true
 [[ -n "${ver:-}" ]] && ok "client version $ver"

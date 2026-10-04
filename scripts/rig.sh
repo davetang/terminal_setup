@@ -148,6 +148,7 @@ PATH="\$HOME/.local/bin:\$PATH" exec "$dest/rig" "\$@"
 EOF
 chmod 0755 "$BIN/rig"
 ok "rig -> $BIN/rig  (a wrapper around $dest/rig)"
+record_install rig gh "${tag:-$(_release_tag "$url")}"
 
 # The wrapper points at this version only; older ones are dead weight.
 for d in "$BIN"/rig-[0-9]*/; do

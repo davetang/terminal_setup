@@ -41,4 +41,5 @@ bash -n "$f" || die "termcheck: $REPO@${sha:0:7}:termcheck does not parse"
 
 install -m 0755 "$f" "$BIN/termcheck"
 ok "termcheck -> $BIN/termcheck ($REPO@${sha:0:7})"
+record_install termcheck git "$sha"
 log "termcheck done — run it outside tmux, inside tmux and inside screen: each has its own answers"

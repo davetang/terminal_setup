@@ -40,4 +40,5 @@ bash -n "$f" || die "sendcb: $REPO@${sha:0:7}:sendcb does not parse"
 
 install -m 0755 "$f" "$BIN/sendcb"
 ok "sendcb -> $BIN/sendcb ($REPO@${sha:0:7})"
+record_install sendcb git "$sha"
 log "sendcb done — inside tmux it needs 'set -g set-clipboard on' (see README.md)"

@@ -89,6 +89,7 @@ for b in go gofmt; do
   ok "$b -> $BIN/$b"
 done
 _check_libc "$BIN/go"
+record_install go go "$ver"
 
 ok "$("$BIN/go" version)  (GOROOT $dest)"
 

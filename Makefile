@@ -26,7 +26,7 @@ PIPTOOLS := visidata llm
 # they are NOT part of 'make install' — ask for them by name.
 SDKTOOLS := go openjdk
 
-.PHONY: help deps check install setup uninstall miniforge freeze \
+.PHONY: help deps check outdated install setup uninstall miniforge freeze \
         binaries conda-tools pip-tools sdks rig ollama sendcb notify showimg termcheck screen ohmyzsh tldr-pages \
         $(BINTOOLS) $(CONDATOOLS) $(PIPTOOLS) $(SDKTOOLS)
 
@@ -45,6 +45,9 @@ deps: ## Preflight: check prerequisites (read-only)
 
 check: ## Report install status of every tool
 	@$(ROOT)scripts/status.sh
+
+outdated: ## Report tools not at their versions.lock pin (UPSTREAM=1: and pins behind upstream)
+	@$(ROOT)scripts/outdated.sh
 
 freeze: ## Pin every tool to its current version -> versions.lock
 	@$(ROOT)scripts/freeze.sh

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # run.sh — make-free entry point. Mirrors the Makefile targets 1:1, for hosts
 # without `make`.  Usage:  ./run.sh <target>
-#   ./run.sh deps|check|install|setup|uninstall
+#   ./run.sh deps|check|outdated|install|setup|uninstall
 #   ./run.sh binaries|conda-tools|pip-tools|sdks|miniforge
 #   ./run.sh bat|fzf|tmux|sendcb|notify|showimg|termcheck|screen|... (any single tool)
 #   ./run.sh sdks|go|openjdk|rig|ohmyzsh|tldr-pages (extras; not part of 'install')
@@ -31,12 +31,13 @@ t="${1:-help}"
 case "$t" in
   help|-h|--help)
     echo "usage: ./run.sh <target>"
-    echo "  deps check freeze install setup uninstall"
+    echo "  deps check outdated freeze install setup uninstall"
     echo "  binaries conda-tools pip-tools miniforge"
     echo "  sdks rig ohmyzsh tldr-pages   (extras, not part of 'install')"
     echo "  <tool>   any of: ${BINTOOLS[*]} ${CONDATOOLS[*]} ${PIPTOOLS[*]} ${SDKTOOLS[*]} ollama sendcb notify showimg termcheck screen" ;;
   deps)        "$here/deps.sh" ;;
   check)       "$here/scripts/status.sh" ;;
+  outdated)    "$here/scripts/outdated.sh" ;;
   freeze)      "$here/scripts/freeze.sh" ;;
   setup)       "$here/scripts/setup_shell.sh" ;;
   uninstall)   "$here/scripts/uninstall.sh" ;;
