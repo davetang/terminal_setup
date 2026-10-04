@@ -3,7 +3,7 @@
 # pinning the whole set for reproducible installs. Re-run any time to refresh.
 #   forge tools   -> exact release tag_name from GitHub or Gitea (one call each)
 #   git tools     -> newest commit SHA on the default branch (sendcb, notify,
-#                    showimg: they have no releases)
+#                    showimg, termcheck: they have no releases)
 #   conda tools   -> conda-forge latest_version (anaconda.org API)
 #   pip tools     -> latest on PyPI
 #   gnu tools     -> newest source tarball on ftp.gnu.org (screen, built from source)
@@ -22,7 +22,7 @@ tmp="$TMP/versions.lock"
   echo "# 'gh' means a release tag from the tool's forge (GitHub, or the Gitea"
   echo "# host named in binaries.tsv), not that it came from github.com."
   echo "# 'git' is a commit SHA, for a tool that publishes no releases (sendcb,"
-  echo "# notify, showimg)."
+  echo "# notify, showimg, termcheck)."
   echo "# 'adoptium' is the one loose pin: it holds a JDK *feature* release (21,"
   echo "# 25) and openjdk.sh installs the newest patch of it, because Temurin"
   echo "# ships security fixes quarterly and pinning past them is a liability."
@@ -54,10 +54,10 @@ for pair in ollama:ollama/ollama rig:r-lib/rig; do
   fi
 done
 
-# sendcb, notify and showimg publish no releases at all (each is bash on a
-# branch), so their pins are commits rather than tags, and freezing moves them
-# to the newest.
-for name in sendcb notify showimg; do
+# sendcb, notify, showimg and termcheck publish no releases at all (each is
+# bash on a branch), so their pins are commits rather than tags, and freezing
+# moves them to the newest.
+for name in sendcb notify showimg termcheck; do
   sha="$(forge_latest_commit "davetang/$name")"
   if [[ -n "$sha" ]]; then
     printf '%s\tgit\t%s\n' "$name" "$sha" >> "$tmp"; ok "$name -> ${sha:0:7}"

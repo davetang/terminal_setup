@@ -4,7 +4,7 @@
 # 'gh' means a release tag from the tool's forge (GitHub, or the Gitea
 # host named in binaries.tsv), not that it came from github.com.
 # 'git' is a commit SHA, for a tool that publishes no releases (sendcb,
-# notify, showimg).
+# notify, showimg, termcheck).
 # 'adoptium' is the one loose pin: it holds a JDK *feature* release (21,
 # 25) and openjdk.sh installs the newest patch of it, because Temurin
 # ships security fixes quarterly and pinning past them is a liability.
@@ -54,6 +54,7 @@ rig	gh	v0.10.0
 sendcb	git	47de976ade1bca10a5a1fd0d4bf1104c68b0bed5
 notify	git	1d37c3ea2841612a661efc6f83e5f18b007fc9e0
 showimg	git	b98fdd27c839e6e54fb22467413687be48abc51d
+termcheck	git	83d8787bb80f1ef58570e4436d1d752c38b658c7
 tmux	conda	3.7c_
 zsh	conda	5.9
 datamash	conda	1.9

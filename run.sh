@@ -3,7 +3,7 @@
 # without `make`.  Usage:  ./run.sh <target>
 #   ./run.sh deps|check|install|setup|uninstall
 #   ./run.sh binaries|conda-tools|pip-tools|sdks|miniforge
-#   ./run.sh bat|fzf|tmux|sendcb|notify|showimg|screen|... (any single tool)
+#   ./run.sh bat|fzf|tmux|sendcb|notify|showimg|termcheck|screen|... (any single tool)
 #   ./run.sh sdks|go|openjdk|rig|ohmyzsh|tldr-pages (extras; not part of 'install')
 #   FORCE=1 ./run.sh bat             (reinstall)
 set -euo pipefail
@@ -34,7 +34,7 @@ case "$t" in
     echo "  deps check freeze install setup uninstall"
     echo "  binaries conda-tools pip-tools miniforge"
     echo "  sdks rig ohmyzsh tldr-pages   (extras, not part of 'install')"
-    echo "  <tool>   any of: ${BINTOOLS[*]} ${CONDATOOLS[*]} ${PIPTOOLS[*]} ${SDKTOOLS[*]} ollama sendcb notify showimg screen" ;;
+    echo "  <tool>   any of: ${BINTOOLS[*]} ${CONDATOOLS[*]} ${PIPTOOLS[*]} ${SDKTOOLS[*]} ollama sendcb notify showimg termcheck screen" ;;
   deps)        "$here/deps.sh" ;;
   check)       "$here/scripts/status.sh" ;;
   freeze)      "$here/scripts/freeze.sh" ;;
@@ -52,6 +52,7 @@ case "$t" in
   sendcb)      "$here/scripts/sendcb.sh" ;;
   notify)      "$here/scripts/notify.sh" ;;
   showimg)     "$here/scripts/showimg.sh" ;;
+  termcheck)   "$here/scripts/termcheck.sh" ;;
   screen)      "$here/scripts/screen.sh" ;;
   install)
     "$here/deps.sh"; do_binaries; do_conda; do_pip
@@ -59,6 +60,7 @@ case "$t" in
     "$here/scripts/sendcb.sh"
     "$here/scripts/notify.sh"
     "$here/scripts/showimg.sh"
+    "$here/scripts/termcheck.sh"
     "$here/scripts/screen.sh"
     echo; ok "Done. Next: ./run.sh setup, then restart your shell." ;;
   *)

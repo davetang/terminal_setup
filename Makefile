@@ -27,7 +27,7 @@ PIPTOOLS := visidata llm
 SDKTOOLS := go openjdk
 
 .PHONY: help deps check install setup uninstall miniforge freeze \
-        binaries conda-tools pip-tools sdks rig ollama sendcb notify showimg screen ohmyzsh tldr-pages \
+        binaries conda-tools pip-tools sdks rig ollama sendcb notify showimg termcheck screen ohmyzsh tldr-pages \
         $(BINTOOLS) $(CONDATOOLS) $(PIPTOOLS) $(SDKTOOLS)
 
 help: ## Show this help
@@ -49,7 +49,7 @@ check: ## Report install status of every tool
 freeze: ## Pin every tool to its current version -> versions.lock
 	@$(ROOT)scripts/freeze.sh
 
-install: deps binaries conda-tools pip-tools ollama sendcb notify showimg screen ## Install the whole curated set
+install: deps binaries conda-tools pip-tools ollama sendcb notify showimg termcheck screen ## Install the whole curated set
 	@echo
 	@echo "Done. Next: 'make setup' to wire your shell, then restart it."
 
@@ -93,6 +93,9 @@ notify: ## Install notify: desktop notifications on your own machine, over SSH t
 
 showimg: ## Install showimg: images in your own terminal, over SSH too
 	@$(ROOT)scripts/showimg.sh
+
+termcheck: ## Install termcheck: what gets through to your own terminal, and the fixes
+	@$(ROOT)scripts/termcheck.sh
 
 screen: ## Build GNU Screen 5 from source (24-bit colour; needs gcc + make)
 	@$(ROOT)scripts/screen.sh

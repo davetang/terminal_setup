@@ -24,6 +24,7 @@ for more examples once installed.
 - [Clipboard (sendcb, xclip)](#clipboard-sendcb-xclip)
 - [Notifications (notify)](#notifications-notify)
 - [Images (showimg)](#images-showimg)
+- [What reaches your terminal (termcheck)](#what-reaches-your-terminal-termcheck)
 - [Disk usage (ncdu)](#disk-usage-ncdu)
 - [GNU coreutils, g-prefixed](#gnu-coreutils-g-prefixed)
 - [Language toolchains (go, openjdk)](#language-toolchains-go-openjdk)
@@ -579,6 +580,24 @@ if [ -n "${STY:-}" ]; then export SHOWIMG_PROTOCOL=iterm; fi
 printf '\e_Ga=T,f=24,s=1,v=1,c=10,r=5;/wAA\e\\\n'   # kitty protocol
 # drawn over the text, and nothing redraws it: switching tmux windows or
 # scrolling can wipe it. Run it again, or clear.
+```
+
+## What reaches your terminal (termcheck)
+
+`termcheck` reports which of clipboard copies, notifications, images, links
+and 24-bit colour get through to the terminal you are *sitting at*, over SSH
+or mosh and through tmux or screen, and the settings that would let the rest
+through. Each place has its own answers, so run it in each.
+
+```sh
+termcheck                             # ok / fix / no / ? per feature, then what to change
+termcheck -t                          # then a test of each: copies a line, pops notifications, draws a red bar
+termcheck -v                          # with your terminal's answers byte by byte
+termcheck || echo 'something to fix'  # exits 1 when there is a fix to make
+
+# after adding the lines it prints under "To fix" to ~/.tmux.conf
+tmux source-file ~/.tmux.conf         # then detach and reattach: tmux reads the
+termcheck                             # terminal's features when a client attaches
 ```
 
 ## Disk usage (ncdu)

@@ -53,7 +53,7 @@ Every target works with either `make <target>` or `./run.sh <target>`:
 | Target | Does |
 |--------|------|
 | `deps` | read-only preflight (checks prerequisites) |
-| `install` | `deps` + everything: binaries, conda tools, pip tools, ollama, sendcb, notify, showimg, screen |
+| `install` | `deps` + everything: binaries, conda tools, pip tools, ollama, sendcb, notify, showimg, termcheck, screen |
 | `binaries` / `conda-tools` / `pip-tools` | install just one group |
 | `sdks` | `go` + `openjdk` — language toolchains, **not** in `install` |
 | `rig` | rig, the R version manager, in user mode (no R until `rig add`) — **not** in `install` |
@@ -138,6 +138,7 @@ reports whether you have them.
 | **sendcb** | copy to your *own* clipboard from any shell, over SSH too (OSC 52) | script, pinned commit |
 | **notify** | desktop notification on your *own* machine from any shell, over SSH too; a hook for long commands | script, pinned commit |
 | **showimg** | show a plot or image in your *own* terminal from any shell, over SSH too | script, pinned commit |
+| **termcheck** | report what gets through to your *own* terminal over SSH, tmux and screen, and what to change | script, pinned commit |
 | **tmux** | terminal multiplexer | conda-forge |
 | **zsh** | the shell | conda-forge |
 | **datamash** | group-by statistics | conda-forge |
@@ -162,9 +163,9 @@ for all but `tea`, which Gitea develops on gitea.com (see
 [Tools not on GitHub](#tools-not-on-github)) — pinned to the versions in
 `versions.lock` (see [Reproducibility](#reproducibility-version-pinning)).
 `ollama` is the odd one out — see [ollama, client only](#ollama-client-only).
-`sendcb`, `notify` and `showimg` are bash scripts with no releases, so they are
-fetched at a pinned commit — see [sendcb](#sendcb), [notify](#notify) and
-[showimg](#showimg).
+`sendcb`, `notify`, `showimg` and `termcheck` are bash scripts with no
+releases, so they are fetched at a pinned commit — see [sendcb](#sendcb),
+[notify](#notify), [showimg](#showimg) and [termcheck](#termcheck).
 `tmux`, `zsh`, `datamash`, `parallel`, `pv`, `goaccess`, `xclip`, `ncdu`,
 `tree`, `pigz` and `coreutils` have no static binary this setup can fetch (see
 [Tools not on GitHub](#tools-not-on-github) for `ncdu`), so they come from
@@ -389,6 +390,41 @@ this does too; adds `~/bin` to `PATH`, which `make setup` already does; and
 edits `~/.tmux.conf`, which is left to you. showimg needs one line there: see
 [After installing](#after-installing). The rest of `setup.sh` only reports on
 screen, mosh and the converters it finds.
+
+## termcheck
+
+[`termcheck`](https://github.com/davetang/termcheck) is the fourth: it checks
+what a shell can send to the terminal you're **sitting at**, which is what the
+other three depend on. Clipboard copies, notifications, images, links (OSC 8)
+and 24-bit colour each travel as an escape sequence, and SSH, mosh, tmux and
+GNU screen each pass some on, drop others, or need a setting first. termcheck
+asks your terminal what it is (through tmux and screen too), reads tmux's and
+screen's settings and checks the terminfo entry for `$TERM`, then reports
+`ok`, `fix`, `no` or `?` per feature, with the lines to add where something is
+`fix`:
+
+```sh
+termcheck            # on the remote machine: the report, and what to change
+termcheck -t         # then send one of each, to see which arrive (copies a line to your clipboard)
+termcheck -v         # with your terminal's answers byte by byte
+```
+
+Run it in each place you work, outside tmux, inside tmux and inside screen,
+since each has its own answers. It exits 1 when something needs fixing, and
+changes nothing itself. It needs bash 4 and coreutils.
+
+```sh
+make termcheck            # or: ./run.sh termcheck (also run by make install)
+FORCE=1 make termcheck    # reinstall at the pinned commit
+```
+
+**Pinned to a commit**, the same way as [sendcb](#sendcb): no releases, so
+`versions.lock` holds a commit SHA under `git`, and `scripts/termcheck.sh`
+fetches the script from that commit on raw.githubusercontent.com.
+
+**Upstream's `setup.sh` is not run.** It copies `termcheck` to `~/bin`, which
+this does too, and adds `~/bin` to `PATH`, which `make setup` already does. The
+rest of it only checks for bash 4, coreutils, `infocmp` and `/proc`.
 
 ## GNU Screen 5, built from source
 
@@ -628,6 +664,7 @@ scripts/ollama.sh              stream the ollama CLI out of upstream's bundle
 scripts/sendcb.sh              fetch the sendcb script at its pinned commit
 scripts/notify.sh              fetch notify and its shell hook at their pinned commit
 scripts/showimg.sh             fetch the showimg script at its pinned commit
+scripts/termcheck.sh           fetch the termcheck script at its pinned commit
 scripts/screen.sh              build GNU Screen 5 from source, linked against Miniforge
 scripts/{go,openjdk}.sh        vendor tarballs → ~/bin/<name>-<version>/ (make sdks)
 scripts/rig.sh                 rig in user mode, behind a wrapper that keeps it out of your rc files
@@ -692,6 +729,7 @@ delta       gh             0.19.2
 sendcb      git            47de976ade1bca10a5a1fd0d4bf1104c68b0bed5
 notify      git            1d37c3ea2841612a661efc6f83e5f18b007fc9e0
 showimg     git            b98fdd27c839e6e54fb22467413687be48abc51d
+termcheck   git            83d8787bb80f1ef58570e4436d1d752c38b658c7
 tmux        conda          3.7b_
 visidata    pip            3.4
 llm         pip            0.31.1
@@ -702,9 +740,9 @@ openjdk     adoptium       21
 
 - **Forge tools** (GitHub or Gitea) install from `releases/tags/<tag>` (the
   exact tag), not `latest`; the `gh` channel in the lockfile means "a release
-  tag", not necessarily github.com. **sendcb**, **notify** and **showimg**
-  have no releases, so `git` holds a commit SHA and their files are fetched
-  from that commit. **conda/pip tools** install `pkg=version`.
+  tag", not necessarily github.com. **sendcb**, **notify**, **showimg** and
+  **termcheck** have no releases, so `git` holds a commit SHA and their files
+  are fetched from that commit. **conda/pip tools** install `pkg=version`.
   **screen** builds that version's source tarball from ftp.gnu.org (`gnu`).
   **go** takes that exact release from go.dev. **openjdk** is the one loose
   pin in the file — `adoptium` holds a feature release (`21`), and the newest
@@ -849,6 +887,11 @@ and loads notify's hook. Nine tools need one manual step:
   inside screen only, as
   [showimg's README](https://github.com/davetang/showimg#gnu-screen) shows.
   `showimg -v plot.png` says which protocol and size it used.
+
+Not sure which of the sendcb, notify and showimg steps you still need? Run
+`termcheck` where you'll use them (inside tmux, inside screen): it prints the
+`~/.tmux.conf` lines that are missing, and `termcheck -t` sends a test of
+each.
 
 Everything else works the moment it's on `PATH`. Run `make check` to confirm.
 
