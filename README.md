@@ -729,7 +729,7 @@ delta       gh             0.19.2
 sendcb      git            47de976ade1bca10a5a1fd0d4bf1104c68b0bed5
 notify      git            1d37c3ea2841612a661efc6f83e5f18b007fc9e0
 showimg     git            b98fdd27c839e6e54fb22467413687be48abc51d
-termcheck   git            83d8787bb80f1ef58570e4436d1d752c38b658c7
+termcheck   git            0542103be8626d960ba968a81bbe16176f8991b6
 tmux        conda          3.7b_
 visidata    pip            3.4
 llm         pip            0.31.1
