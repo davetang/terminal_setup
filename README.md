@@ -406,6 +406,7 @@ screen's settings and checks the terminfo entry for `$TERM`, then reports
 ```sh
 termcheck            # on the remote machine: the report, and what to change
 termcheck -t         # then send one of each, to see which arrive (copies a line to your clipboard)
+                     # inside tmux or screen it then waits for Enter to remove the kitty image
 termcheck -v         # with your terminal's answers byte by byte
 ```
 
@@ -729,7 +730,7 @@ delta       gh             0.19.2
 sendcb      git            47de976ade1bca10a5a1fd0d4bf1104c68b0bed5
 notify      git            1d37c3ea2841612a661efc6f83e5f18b007fc9e0
 showimg     git            b98fdd27c839e6e54fb22467413687be48abc51d
-termcheck   git            0542103be8626d960ba968a81bbe16176f8991b6
+termcheck   git            295a09d3f2f87f5d84109e30ee86188a3efcb30a
 tmux        conda          3.7b_
 visidata    pip            3.4
 llm         pip            0.31.1

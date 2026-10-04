@@ -8,7 +8,7 @@
 
 `termcheck`
 
-- Also send a test of each feature, to see which arrive (copies a line of text to your clipboard):
+- Also send a test of each feature, to see which arrive (copies a line of text to your clipboard; inside tmux or screen, press Enter to remove the kitty image):
 
 `termcheck -t`
 
