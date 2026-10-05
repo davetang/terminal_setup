@@ -129,6 +129,8 @@ reports whether you have them.
 | **shellcheck** | lint shell scripts (quoting, globbing, `[ ]` traps) | binary |
 | **shfmt** | format shell scripts (`gofmt` for sh/bash) | binary |
 | **ruff** | Python linter + formatter, very fast | binary |
+| **air** | R formatter (Posit), very fast | binary |
+| **jarl** | R linter, with safe auto-fixes | binary |
 | **trippy** (`trip`) | traceroute + ping, in a TUI | binary |
 | **tt** | typing speed test / practice drills | binary |
 | **ttyper** | typing test with per-key accuracy stats | binary |

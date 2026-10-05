@@ -5,7 +5,7 @@ for more examples once installed.
 
 - [Coreutils replacements](#coreutils-replacements)
 - [git + benchmarking](#git--benchmarking)
-- [Linting & formatting (shellcheck, shfmt, ruff)](#linting--formatting-shellcheck-shfmt-ruff)
+- [Linting & formatting (shellcheck, shfmt, ruff, air, jarl)](#linting--formatting-shellcheck-shfmt-ruff-air-jarl)
 - [Data wrangling](#data-wrangling)
 - [Throughput & parallelism](#throughput--parallelism)
 - [Docs & watching](#docs--watching)
@@ -70,7 +70,7 @@ hyperfine 'rg foo' 'grep -r foo .'   # benchmark & compare commands
 hyperfine --warmup 3 './build.sh'
 ```
 
-## Linting & formatting (shellcheck, shfmt, ruff)
+## Linting & formatting (shellcheck, shfmt, ruff, air, jarl)
 
 ```sh
 shellcheck script.sh        # lint one script; non-zero exit if anything is flagged
@@ -88,6 +88,14 @@ ruff check --fix .          # apply the fixes ruff considers safe
 ruff format .               # format (black-compatible)
 ruff check --select I --fix .   # sort imports (the isort rules)
 ruff check --statistics .   # findings counted by rule — tells you what to fix first
+air format .                # format R in place (dirs recurse; air.toml configures it)
+air format --check .        # report what would change (exit 1 if any) — CI-friendly
+air format --stdin-file-path x.R < x.R   # stdin -> stdout, for editors and pipes
+jarl check .                # lint R
+jarl check --fix .          # apply safe fixes; refuses on a dirty git tree (--allow-dirty)
+jarl check -s PERF .        # only some rules, or a group of them (-i to ignore)
+jarl check --statistics .   # findings counted by rule
+jarl rule any_is_na         # what a rule flags, and why
 ```
 
 ## Data wrangling

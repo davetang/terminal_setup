@@ -15,7 +15,7 @@ bins=(bat eza fd rg sd dust duf procs btop delta hyperfine
       fzf zoxide atuin yazi ya broot
       starship direnv
       just chezmoi xh tldr lazygit
-      shellcheck shfmt ruff
+      shellcheck shfmt ruff air jarl
       gh tea pandoc viddy ollama sendcb notify notify-hook.sh showimg termcheck trip tt ttyper
       screen go gofmt java javac jar jshell rig)
 

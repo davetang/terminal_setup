@@ -10,7 +10,7 @@ tools=(bat eza fd rg sd dust duf procs btop delta hyperfine
        fzf zoxide atuin yazi ya broot
        starship direnv
        just chezmoi xh tldr lazygit
-       shellcheck shfmt ruff
+       shellcheck shfmt ruff air jarl
        gh tea pandoc viddy ollama sendcb notify showimg termcheck trip tt ttyper
        tmux zsh datamash parallel pv goaccess xclip ncdu vd llm
        tree pigz gls
