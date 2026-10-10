@@ -80,6 +80,9 @@ ask() {
     tt|screen)       args=(-v) ;;
     java) _run "$1" -version 2>&1 | sed -nE 's/.*version "([^"]+)".*/\1/p' | head -1
           return ;;
+    # leads with its server's version, and names its own last, if they differ
+    ollama) _run "$1" --version 2>&1 | grep -oE '[0-9]+(\.[0-9]+)+' | tail -1
+            return ;;
   esac
   _run "$1" "${args[@]}" 2>&1 | grep -oE '[0-9]+(\.[0-9]+)+' | head -1
 }

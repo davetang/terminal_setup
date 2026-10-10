@@ -109,6 +109,13 @@ install -m 0755 "$d/$MEMBER" "$BIN/ollama"
 ok "ollama -> $BIN/ollama ($(du -h "$BIN/ollama" | cut -f1), client only — no serve runners)"
 record_install ollama gh "${tag:-$(_release_tag "$url")}"
 
-ver="$("$BIN/ollama" --version 2>&1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)" || true
+# --version leads with the *server's* version when one answers ("ollama version
+# is X") and adds "Warning: client version is Y" only when the two differ, so
+# the client's version is the last one printed.
+out="$("$BIN/ollama" --version 2>&1)" || true
+ver="$(grep -oE '[0-9]+\.[0-9]+\.[0-9]+' <<<"$out" | tail -1)" || true
+srv="$(sed -nE 's/^ollama version is ([0-9.]+).*/\1/p' <<<"$out")" || true
 [[ -n "${ver:-}" ]] && ok "client version $ver"
+[[ -n "${srv:-}" && "$srv" != "${ver:-}" ]] \
+  && warn "your server (${OLLAMA_HOST:-127.0.0.1:11434}) runs ollama $srv"
 log "ollama done — set OLLAMA_HOST to your server, e.g. export OLLAMA_HOST=http://gpu-box:11434"
