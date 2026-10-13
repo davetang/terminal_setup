@@ -39,6 +39,7 @@ chezmoi	gh	v2.72.0
 xh	gh	v0.26.2
 tldr	gh	v1.9.0
 lazygit	gh	v0.64.1
+uv	gh	0.13.0
 shellcheck	gh	v0.11.0
 shfmt	gh	v3.14.1
 ruff	gh	0.16.8

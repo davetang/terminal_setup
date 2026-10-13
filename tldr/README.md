@@ -5,7 +5,7 @@ Per-tool examples for [tealdeer](https://github.com/tealdeer-rs/tealdeer), the
 [`cheatsheet.md`](../cheatsheet.md), but delivered where you actually reach for
 it: `tldr <tool>`.
 
-One file per tool in this repo's set — 64 of them, matching `make check`.
+One file per tool in this repo's set — 66 of them, matching `make check`.
 
 ## Does the name need `.patch`? Yes, and it changes the behaviour
 
@@ -23,7 +23,7 @@ so if no upstream page exists the function returns `None` and `tldr <command>`
 prints *page not found* — the patch is never shown. So the suffix has to follow
 what upstream publishes:
 
-- **51 tools have an upstream page** → `<command>.patch.md`, holding only the
+- **53 tools have an upstream page** → `<command>.patch.md`, holding only the
   extra examples this setup adds (the marker line `- terminal-setup extras`
   shows where upstream ends).
 - **13 have none to attach to** → `<command>.page.md`, a complete page: `csvtk`,

@@ -6,6 +6,7 @@ for more examples once installed.
 - [Coreutils replacements](#coreutils-replacements)
 - [git + benchmarking](#git--benchmarking)
 - [Linting & formatting (shellcheck, shfmt, ruff, air, jarl)](#linting--formatting-shellcheck-shfmt-ruff-air-jarl)
+- [Python (uv)](#python-uv)
 - [Data wrangling](#data-wrangling)
 - [Throughput & parallelism](#throughput--parallelism)
 - [Docs & watching](#docs--watching)
@@ -97,6 +98,27 @@ jarl check -s PERF .        # only some rules, or a group of them (-i to ignore)
 jarl check --statistics .   # findings counted by rule
 jarl rule any_is_na         # what a rule flags, and why
 ```
+
+## Python (uv)
+
+```sh
+uv venv                     # make .venv here; uv's commands use it without activating
+uv pip install -r requirements.txt   # pip's interface, into .venv, much faster
+uv init demo && cd demo     # a new project, git-initialised: pyproject.toml, src/demo/
+uv add requests             # add a dependency; updates pyproject.toml and uv.lock
+uv run demo                 # run its command in the project's env, syncing it first
+uv run --with rich x.py     # one extra package, for this run only
+uv add --script x.py requests   # deps recorded inside x.py (PEP 723); uv run x.py
+uv python install 3.13      # an interpreter, no root; python3.13 lands in ~/.local/bin
+uv python list              # interpreters found here, and the ones it can fetch
+uvx --from csvkit csvlook data.csv   # run a PyPI tool without installing it
+uv tool install csvkit      # ...or install it for good, into ~/.local/bin
+uv tool upgrade --all       # upgrade every tool installed that way
+uv cache clean              # empty ~/.cache/uv
+```
+
+To upgrade uv itself, move its pin in `versions.lock`, then `FORCE=1 make uv`;
+`uv self update` refuses here.
 
 ## Data wrangling
 

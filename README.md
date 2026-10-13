@@ -126,6 +126,7 @@ reports whether you have them.
 | **xh** | ergonomic HTTP client (curl alt) | binary |
 | **tldr** (tealdeer) | example-first man pages | binary |
 | **lazygit** | git TUI (stage/commit/branch/rebase) | binary |
+| **uv** (+`uvx`) | Python packages, venvs, projects and interpreters (`pip`/`venv`/`pipx`/`pyenv`) | binary |
 | **shellcheck** | lint shell scripts (quoting, globbing, `[ ]` traps) | binary |
 | **shfmt** | format shell scripts (`gofmt` for sh/bash) | binary |
 | **ruff** | Python linter + formatter, very fast | binary |
@@ -271,6 +272,37 @@ machine — list them in `TS_LLM_PLUGINS`. This works on an existing `llm` too:
 ```sh
 TS_LLM_PLUGINS='llm-ollama llm-anthropic' make llm
 ```
+
+## uv
+
+[`uv`](https://docs.astral.sh/uv/) is Astral's Python package and project
+manager, from the makers of ruff. One static binary covers what `pip`, `venv`,
+`pipx` and `pyenv` do, and resolves and installs far faster than `pip`. `uvx`
+ships with it and runs a tool from PyPI without installing it:
+
+```sh
+make uv                           # or: ./run.sh uv (also run by make install)
+uv venv && uv pip install pandas  # a .venv here, and pip into it
+uv python install 3.13            # an interpreter: no root, no compiler
+uvx --from csvkit csvlook data.csv   # a PyPI tool, fetched and cached, nothing installed
+```
+
+A few things to know:
+
+- **Upgrading**: `uv self update` refuses, because it only replaces copies
+  that uv's own install script put there. Move the pin in `versions.lock` (or
+  `make freeze`), then `FORCE=1 make uv`.
+- **What uv installs goes to `~/.local/bin`**, not `~/bin`: `uv tool install`
+  puts each tool's commands there, and `uv python install` adds `python3.13`
+  and the like (`--default` adds `python` and `python3` too, which then shadow
+  the system's in every shell). `shell/init.sh` puts `~/.local/bin` on `PATH`
+  only if it exists, so on a fresh account restart the shell after the first
+  one. Skip the `uv tool update-shell` (or `uv python update-shell`) that uv
+  suggests: it appends a `PATH` line of its own to your rc files, and
+  `make setup` already covers that.
+- **A uv you already have** stops `make uv`, as for any tool on `PATH`. A
+  `~/.local/bin/uv` from upstream's installer also outranks `FORCE=1 make uv`'s
+  copy, because `shell/init.sh` puts `~/.local/bin` first.
 
 ## sendcb
 
@@ -934,7 +966,9 @@ That includes `screen`, `go`, the JDK and `rig`, along with their
 `~/bin/screen-<version>/`, `~/bin/go-<version>/`, `~/bin/jdk-<release>/` and
 `~/bin/rig-<version>/` trees. R itself stays: it is rig's, it runs without rig,
 and the uninstall prints the one `rm -rf` that removes it, should you want that
-too.
+too. `uv` goes but what it installed stays, for the same reason: tools and
+Pythons in `~/.local/share/uv`, with their commands in `~/.local/bin`. Run
+`uv tool uninstall --all` and `uv python uninstall --all` first to remove them.
 
 Conda tools (`tree`, `pigz` and `coreutils` among them), `visidata`, `llm`,
 Miniforge, `~/.oh-my-zsh` and your rc edits are left untouched (`pipx uninstall

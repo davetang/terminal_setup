@@ -52,6 +52,10 @@ chezmoi	twpayne/chezmoi	chezmoi_[0-9.]+_linux_amd64\.tar\.gz$
 xh	ducaale/xh	xh-v[0-9.]+-x86_64-unknown-linux-(musl|gnu)\.tar\.gz$
 tldr	dbrgn/tealdeer	tealdeer-linux-x86_64-musl$
 lazygit	jesseduffield/lazygit	lazygit_[0-9.]+_[Ll]inux_x86_64\.tar\.gz$
+# uv manages Python projects, venvs, interpreters and tools. Like ruff (same
+# vendor), its tags carry no leading 'v' and its musl build is genuinely static;
+# the $ anchor keeps the regex off each asset's .sha256 sibling.
+uv	astral-sh/uv	uv-x86_64-unknown-linux-(musl|gnu)\.tar\.gz$	uv uvx
 #
 # --- lint / format ---
 # shellcheck publishes a .tar.xz beside every .tar.gz, so match .tar.gz only:

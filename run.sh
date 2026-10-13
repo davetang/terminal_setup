@@ -14,7 +14,7 @@ BINTOOLS=(bat eza fd rg sd dust duf procs btop delta hyperfine
           jq yq mlr csvtk seqkit duckdb
           fzf zoxide atuin yazi broot
           starship direnv
-          just chezmoi xh tldr lazygit
+          just chezmoi xh tldr lazygit uv
           shellcheck shfmt ruff air jarl
           gh tea pandoc viddy trippy tt ttyper)
 CONDATOOLS=(tmux zsh datamash parallel pv goaccess xclip ncdu
