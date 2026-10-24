@@ -11,7 +11,7 @@ tools=(bat eza fd rg sd dust duf procs btop delta hyperfine
        starship direnv
        just chezmoi xh tldr lazygit uv uvx
        shellcheck shfmt ruff air jarl
-       gh tea pandoc viddy ollama sendcb notify showimg termcheck trip tt ttyper
+       gh tea pandoc viddy sendcb notify showimg termcheck trip tt ttyper
        tmux zsh datamash parallel pv goaccess xclip ncdu vd llm
        tree pigz gls
        screen)
@@ -22,7 +22,7 @@ tools=(bat eza fd rg sd dust duf procs btop delta hyperfine
 # rig's to install, not this repo's, so its hint is the next step after rig
 # (and both steps when rig is missing too).
 extras=(go:"make sdks" gofmt:"make sdks" java:"make sdks" javac:"make sdks"
-        rig:"make rig" R:"rig add release")
+        rig:"make rig" R:"rig add release" ollama:"make ollama")
 
 printf '%-12s %-8s %s\n' TOOL STATUS LOCATION
 printf '%-12s %-8s %s\n' ---- ------ --------

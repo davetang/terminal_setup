@@ -4,7 +4,7 @@
 #   ./run.sh deps|check|outdated|install|setup|uninstall
 #   ./run.sh binaries|conda-tools|pip-tools|sdks|miniforge
 #   ./run.sh bat|fzf|tmux|sendcb|notify|showimg|termcheck|screen|... (any single tool)
-#   ./run.sh sdks|go|openjdk|rig|ohmyzsh|tldr-pages (extras; not part of 'install')
+#   ./run.sh sdks|go|openjdk|rig|ollama|ohmyzsh|tldr-pages (extras; not part of 'install')
 #   FORCE=1 ./run.sh bat             (reinstall)
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -33,8 +33,8 @@ case "$t" in
     echo "usage: ./run.sh <target>"
     echo "  deps check outdated freeze install setup uninstall"
     echo "  binaries conda-tools pip-tools miniforge"
-    echo "  sdks rig ohmyzsh tldr-pages   (extras, not part of 'install')"
-    echo "  <tool>   any of: ${BINTOOLS[*]} ${CONDATOOLS[*]} ${PIPTOOLS[*]} ${SDKTOOLS[*]} ollama sendcb notify showimg termcheck screen" ;;
+    echo "  sdks rig ollama ohmyzsh tldr-pages   (extras, not part of 'install')"
+    echo "  <tool>   any of: ${BINTOOLS[*]} ${CONDATOOLS[*]} ${PIPTOOLS[*]} ${SDKTOOLS[*]} sendcb notify showimg termcheck screen" ;;
   deps)        "$here/deps.sh" ;;
   check)       "$here/scripts/status.sh" ;;
   outdated)    "$here/scripts/outdated.sh" ;;
@@ -57,7 +57,6 @@ case "$t" in
   screen)      "$here/scripts/screen.sh" ;;
   install)
     "$here/deps.sh"; do_binaries; do_conda; do_pip
-    "$here/scripts/ollama.sh"
     "$here/scripts/sendcb.sh"
     "$here/scripts/notify.sh"
     "$here/scripts/showimg.sh"

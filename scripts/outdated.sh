@@ -35,7 +35,7 @@ while IFS=$'\t' read -r name repo _ bins; do
   bins="${bins:-$name}"
   tools+=("$name|gh|${bins%% *}|$name|$repo|")
 done < "$ROOTDIR/binaries.tsv"
-tools+=("ollama|gh|ollama|ollama|ollama/ollama|")
+tools+=("ollama|gh|ollama|ollama|ollama/ollama|make ollama")
 for t in sendcb notify showimg termcheck; do tools+=("$t|git|$t|$t|davetang/$t|"); done
 for t in tmux zsh datamash parallel pv goaccess xclip ncdu tree pigz; do
   tools+=("$t|conda|$t|$t||")

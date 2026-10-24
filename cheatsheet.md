@@ -408,6 +408,7 @@ llm models                          # every model available to you right now
 ## LLM queries (ollama, client only)
 
 ```sh
+make ollama                         # opt-in: not part of 'make install'
 export OLLAMA_HOST=http://gpu-box:11434   # default http://127.0.0.1:11434
 ollama list                         # models available on that server
 ollama ps                           # what's loaded in memory right now
@@ -735,6 +736,7 @@ UPSTREAM=1 make outdated   # ...and which pins are behind the newest release
 FORCE=1 make eza  # reinstall a single tool at its pin
 make sdks         # go + openjdk, the opt-in toolchains
 make rig          # rig, then 'rig add release' for R
+make ollama       # the ollama CLI, client only
 make ohmyzsh      # oh-my-zsh into ~/.oh-my-zsh, wired into ~/.zshrc
 make tldr-pages   # this repo's examples into tldr: tldr ncdu, tldr csvtk
 make uninstall    # remove the ~/bin binaries this repo installed

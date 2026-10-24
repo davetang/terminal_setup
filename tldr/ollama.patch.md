@@ -1,6 +1,6 @@
 - terminal-setup extras (davetang/terminal-setup):
 
-- This setup installs the client only: there is no `ollama serve` here, so point it at a server (also settable in shell/init.sh):
+- `make ollama` (opt-in) installs the client only: there is no `ollama serve` here, so point it at a server (also settable in shell/init.sh):
 
 `export OLLAMA_HOST={{http://gpu-box:11434}}`
 

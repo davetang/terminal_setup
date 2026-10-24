@@ -16,13 +16,14 @@ for c in unzip bzip2 xz; do
   if have "$c"; then ok "$c"; else warn "$c not found — Python fallback will handle it"; fi
 done
 
-# zstd is only needed to unpack the ollama release; Python 3.14+ or the
-# zstandard/pyzstd modules also do, else scripts/ollama.sh pulls zstd from conda.
+# zstd is only needed to unpack the ollama release, for the opt-in 'make ollama';
+# Python 3.14+ or the zstandard/pyzstd modules also do, else scripts/ollama.sh
+# pulls zstd from conda.
 if have zstd; then ok "zstd (for the ollama client)"
 elif python3 -c 'import compression.zstd' 2>/dev/null \
   || python3 -c 'import zstandard'       2>/dev/null \
   || python3 -c 'import pyzstd'          2>/dev/null; then ok "zstd via python3 (for the ollama client)"
-else warn "no zstd — 'make ollama' will install it from conda-forge"; fi
+else warn "no zstd — 'make ollama' (opt-in) will install it from conda-forge"; fi
 
 # git is only for 'make ohmyzsh' — oh-my-zsh is a git clone.
 if have git; then ok "git (for 'make ohmyzsh')"

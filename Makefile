@@ -37,7 +37,7 @@ help: ## Show this help
 	@echo
 	@echo "  Groups : binaries  conda-tools  pip-tools  sdks"
 	@echo "  Single : make bat   make fzf   make tmux   ...  (any tool name)"
-	@echo "  Extras : make sdks (go, openjdk)   make rig   make ohmyzsh   make tldr-pages   — not in 'make install'"
+	@echo "  Extras : make sdks (go, openjdk)   make rig   make ollama   make ohmyzsh   make tldr-pages   — not in 'make install'"
 	@echo "  Reinst.: FORCE=1 make bat"
 
 deps: ## Preflight: check prerequisites (read-only)
@@ -52,7 +52,7 @@ outdated: ## Report tools not at their versions.lock pin (UPSTREAM=1: and pins b
 freeze: ## Pin every tool to its current version -> versions.lock
 	@$(ROOT)scripts/freeze.sh
 
-install: deps binaries conda-tools pip-tools ollama sendcb notify showimg termcheck screen ## Install the whole curated set
+install: deps binaries conda-tools pip-tools sendcb notify showimg termcheck screen ## Install the whole curated set
 	@echo
 	@echo "Done. Next: 'make setup' to wire your shell, then restart it."
 
@@ -85,7 +85,7 @@ ohmyzsh: ## Install Oh My Zsh into ~/.oh-my-zsh and wire it into ~/.zshrc
 tldr-pages: tldr ## Copy tldr/ into tealdeer's custom pages dir (installs tealdeer first)
 	@$(ROOT)scripts/tldr_pages.sh
 
-ollama: ## Install the ollama CLI, client only (queries a server, can't serve)
+ollama: ## Install the ollama CLI, client only (queries a server, can't serve) — not in 'make install'
 	@$(ROOT)scripts/ollama.sh
 
 sendcb: ## Install sendcb: copy to your local clipboard, over SSH too (OSC 52)

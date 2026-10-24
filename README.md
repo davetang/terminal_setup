@@ -33,12 +33,14 @@ make check            # report what is / isn't installed
 make outdated         # report what isn't at its pin, and the command to fix it
 ```
 
-Five things sit outside `make install`, because they are large or because they
-write outside `~/bin` rather than adding a binary:
+Six things sit outside `make install`, because they are large, because they
+are fetched out of a large release, or because they write outside `~/bin`
+rather than adding a binary:
 
 ```sh
 make sdks             # go + openjdk (or: make go / make openjdk)
 make rig              # rig, the R version manager; then 'rig add release' for R
+make ollama           # the ollama CLI, client only, streamed out of a 1.4 GB release
 make ohmyzsh          # oh-my-zsh into ~/.oh-my-zsh, wired into ~/.zshrc
 make tldr-pages       # this repo's tldr pages into tealdeer's custom pages dir
 ```
@@ -54,10 +56,11 @@ Every target works with either `make <target>` or `./run.sh <target>`:
 | Target | Does |
 |--------|------|
 | `deps` | read-only preflight (checks prerequisites) |
-| `install` | `deps` + everything: binaries, conda tools, pip tools, ollama, sendcb, notify, showimg, termcheck, screen |
+| `install` | `deps` + everything: binaries, conda tools, pip tools, sendcb, notify, showimg, termcheck, screen |
 | `binaries` / `conda-tools` / `pip-tools` | install just one group |
 | `sdks` | `go` + `openjdk` — language toolchains, **not** in `install` |
 | `rig` | rig, the R version manager, in user mode (no R until `rig add`) — **not** in `install` |
+| `ollama` | the ollama CLI, client only — **not** in `install` |
 | `ohmyzsh` | oh-my-zsh into `~/.oh-my-zsh`, wired into `~/.zshrc` — **not** in `install` |
 | `tldr-pages` | copy [`tldr/`](tldr/) into tealdeer's custom pages dir — **not** in `install` |
 | `<tool>` | install a single tool (e.g. `make fzf`); prefix `FORCE=1` to reinstall |
@@ -139,7 +142,6 @@ reports whether you have them.
 | **tea** | Gitea CLI: issues, PRs, releases | binary |
 | **pandoc** | universal document converter | binary |
 | **viddy** | a modern `watch` | binary |
-| **ollama** | CLI for an Ollama server (**client only**) | binary |
 | **sendcb** | copy to your *own* clipboard from any shell, over SSH too (OSC 52) | script, pinned commit |
 | **notify** | desktop notification on your *own* machine from any shell, over SSH too; a hook for long commands | script, pinned commit |
 | **showimg** | show a plot or image in your *own* terminal from any shell, over SSH too | script, pinned commit |
@@ -158,6 +160,7 @@ reports whether you have them.
 | **visidata** (`vd`) | interactive TUI for tabular data | pipx / pip / conda |
 | **llm** | prompt LLMs from the shell, pipe text into them | pipx / pip / conda |
 | **screen** (GNU) | terminal multiplexer; 5.x, for 24-bit colour | source (gcc + make) |
+| **ollama** | CLI for an Ollama server (**client only**) | streamed out of the release bundle — `make ollama` |
 | **go** | the Go toolchain | go.dev tarball — `make sdks` |
 | **openjdk** | Eclipse Temurin JDK (`java`, `javac`, `jar`, `jshell`) | Adoptium — `make sdks` |
 | **rig** | R installation manager: several R versions side by side, no root | binary + wrapper — `make rig` |
@@ -179,7 +182,8 @@ bootstraps Miniforge under `~/miniforge3` automatically. `visidata` and `llm`
 are pure Python (`pipx` → `pip --user` → conda fallback). `screen` is the one
 source build — see [GNU Screen 5, built from source](#gnu-screen-5-built-from-source).
 
-The last four rows are opt-in and deliberately outside `make install` — see
+The last five rows are opt-in and deliberately outside `make install` — see
+[ollama, client only](#ollama-client-only),
 [Language toolchains](#language-toolchains-go-openjdk),
 [R, through rig](#r-through-rig) and [oh-my-zsh](#oh-my-zsh). `coreutils` is worth a word too: it installs
 conda-forge's **gnu-coreutils**, which is the same source built with
@@ -208,6 +212,11 @@ the CUDA/ROCm/CPU inference runners that only `ollama serve` ever loads. But
 streams the release, extracts that one file, and lets the rest of the download
 die on a broken pipe: **~12 MB over the wire, ~39 MB on disk**, no runners, no
 GPU libraries, no service, nothing listening.
+
+It is opt-in, and left out of `make install` on purpose: the client is only
+useful with an Ollama server to point it at, and getting it means streaming the
+front of a 1.4 GB release, which runs to the full 1.4 GB if the early exit
+does not happen (a `tar` that cannot stop early, say).
 
 ```sh
 make ollama            # or: ./run.sh ollama
@@ -895,8 +904,9 @@ and loads notify's hook. Nine tools need one manual step:
   `chsh -s "$(command -v zsh)"` (the shell must be listed in `/etc/shells`;
   otherwise just run `exec zsh`, or add the path to `/etc/shells` first).
 
-- **ollama** needs a server to talk to — uncomment and edit the `OLLAMA_HOST`
-  line in `shell/init.sh` (it defaults to `http://127.0.0.1:11434`).
+- **ollama** (if you ran `make ollama`) needs a server to talk to — uncomment
+  and edit the `OLLAMA_HOST` line in `shell/init.sh` (it defaults to
+  `http://127.0.0.1:11434`).
 
 - **llm** needs a model to talk to — either a key (`llm keys set openai`) or a
   plugin for something local (`llm install llm-ollama`, which reuses the same
