@@ -338,7 +338,9 @@ conda_install() {
   _conda_setup
   local ver spec="$pkg"; ver="$(lock_get "$pkg" conda)"
   [[ -n "$ver" ]] && spec="$pkg=$ver"
-  log "conda install -c conda-forge $spec  (into base env)"
-  "$CONDA" install -y -c conda-forge "$spec"
-  ok "$pkg installed via conda ($($CONDA run which "$bin" 2>/dev/null || echo "$HOME/miniforge3/bin/$bin"))"
+  # Name the environment explicitly: an activated project must not receive
+  # these tools or have its dependencies changed by this setup.
+  log "conda install -n base -c conda-forge $spec  (into base env)"
+  "$CONDA" install -y -n base -c conda-forge "$spec"
+  ok "$pkg installed via conda ($("$CONDA" run -n base which "$bin" 2>/dev/null || echo "$HOME/miniforge3/bin/$bin"))"
 }

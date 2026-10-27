@@ -21,7 +21,7 @@ elif have pip3 || have pip; then
 else
   warn "no pipx/pip — installing visidata via conda-forge"
   _conda_setup
-  log "conda install -c conda-forge $condaspec"
-  "$CONDA" install -y -c conda-forge "$condaspec"
+  log "conda install -n base -c conda-forge $condaspec"
+  "$CONDA" install -y -n base -c conda-forge "$condaspec"
 fi
 ok "visidata installed ($(command -v vd 2>/dev/null || echo 'restart shell / check ~/.local/bin on PATH'))"

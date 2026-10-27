@@ -24,8 +24,8 @@ py_ok() {
 
 conda_llm() {
   _conda_setup
-  log "conda install -c conda-forge $condaspec"
-  "$CONDA" install -y -c conda-forge "$condaspec"
+  log "conda install -n base -c conda-forge $condaspec"
+  "$CONDA" install -y -n base -c conda-forge "$condaspec"
 }
 
 # _llm_bin: print the llm executable, including the spots a fresh install lands
