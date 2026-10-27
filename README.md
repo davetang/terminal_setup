@@ -801,6 +801,9 @@ openjdk     adoptium       21
   make freeze     # or: ./run.sh freeze  — rewrites versions.lock
   ```
 
+  If any lookup fails, `freeze` exits with an error and leaves `versions.lock`
+  unchanged. Retry after the connection or upstream service recovers.
+
 - **See what's out of date**, and the command that fixes each one:
 
   ```sh

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # freeze.sh — resolve the current version of every tool and write versions.lock,
 # pinning the whole set for reproducible installs. Re-run any time to refresh.
+# Failed lookups leave the existing lockfile unchanged and return an error.
 #   forge tools   -> exact release tag_name from GitHub or Gitea (one call each)
 #   git tools     -> newest commit SHA on the default branch (sendcb, notify,
 #                    showimg, termcheck: they have no releases)
@@ -11,7 +12,14 @@
 #   openjdk       -> the Temurin *feature* release (21, 25), not the patch
 set -euo pipefail
 source "$(cd "$(dirname "$0")/.." && pwd)/lib.sh"
-set +e   # resolve as much as possible; skip anything that can't be reached
+
+# Collect lookup failures, but keep errexit for file writes and other errors.
+# Only publish a complete set of pins; an outage must never unpin a tool.
+failures=0
+unresolved() {
+  warn "$1: could not resolve $2"
+  failures=$((failures+1))
+}
 
 out="$LOCKFILE"
 tmp="$TMP/versions.lock"
@@ -33,11 +41,11 @@ tmp="$TMP/versions.lock"
 log "resolving release tags from each tool's forge (one call per tool)…"
 while IFS=$'\t' read -r name repo re bins; do
   [[ -z "$name" || "$name" == \#* ]] && continue
-  tag="$(forge_latest_tag "$repo")"
+  tag="$(forge_latest_tag "$repo")" || tag=
   if [[ -n "$tag" ]]; then
     printf '%s\tgh\t%s\n' "$name" "$tag" >> "$tmp"; ok "$name -> $tag"
   else
-    warn "$name: could not resolve tag (left unpinned → latest)"
+    unresolved "$name" "release tag"
   fi
 done < "$ROOTDIR/binaries.tsv"
 
@@ -46,11 +54,11 @@ done < "$ROOTDIR/binaries.tsv"
 # resolve their tags here.
 for pair in ollama:ollama/ollama rig:r-lib/rig; do
   name="${pair%%:*}"
-  tag="$(forge_latest_tag "${pair#*:}")"
+  tag="$(forge_latest_tag "${pair#*:}")" || tag=
   if [[ -n "$tag" ]]; then
     printf '%s\tgh\t%s\n' "$name" "$tag" >> "$tmp"; ok "$name -> $tag"
   else
-    warn "$name: could not resolve tag (left unpinned → latest)"
+    unresolved "$name" "release tag"
   fi
 done
 
@@ -58,39 +66,39 @@ done
 # bash on a branch), so their pins are commits rather than tags, and freezing
 # moves them to the newest.
 for name in sendcb notify showimg termcheck; do
-  sha="$(forge_latest_commit "davetang/$name")"
+  sha="$(forge_latest_commit "davetang/$name")" || sha=
   if [[ -n "$sha" ]]; then
     printf '%s\tgit\t%s\n' "$name" "$sha" >> "$tmp"; ok "$name -> ${sha:0:7}"
   else
-    warn "$name: could not resolve the newest commit (left unpinned → latest)"
+    unresolved "$name" "newest commit"
   fi
 done
 
 log "resolving conda-forge versions…"
 for p in tmux zsh datamash parallel pv goaccess xclip ncdu tree pigz gnu-coreutils; do
-  v="$(conda_latest_version "$p")"
+  v="$(conda_latest_version "$p")" || v=
   if [[ -n "$v" ]]; then printf '%s\tconda\t%s\n' "$p" "$v" >> "$tmp"; ok "$p -> $v"
-  else warn "$p: conda version unresolved (left unpinned)"; fi
+  else unresolved "$p" "conda version"; fi
 done
 
 log "resolving PyPI versions…"
 for p in visidata llm; do
-  v="$(pypi_latest_version "$p")"
+  v="$(pypi_latest_version "$p")" || v=
   if [[ -n "$v" ]]; then printf '%s\tpip\t%s\n' "$p" "$v" >> "$tmp"; ok "$p -> $v"
-  else warn "$p: PyPI version unresolved (left unpinned)"; fi
+  else unresolved "$p" "PyPI version"; fi
 done
 
 log "resolving GNU source releases…"
-v="$(gnu_latest_version screen)"
+v="$(gnu_latest_version screen)" || v=
 if [[ -n "$v" ]]; then printf 'screen\tgnu\t%s\n' "$v" >> "$tmp"; ok "screen -> $v"
-else warn "screen: GNU release unresolved (left unpinned → latest)"; fi
+else unresolved screen "GNU release"; fi
 
 # The two language toolchains are opt-in ('make sdks'), but pin them anyway:
 # a lockfile that only covers what you happened to install is not a lockfile.
 log "resolving language toolchains…"
-v="$(go_latest_version)"
+v="$(go_latest_version)" || v=
 if [[ -n "$v" ]]; then printf 'go\tgo\t%s\n' "$v" >> "$tmp"; ok "go -> $v"
-else warn "go: go.dev version unresolved (left unpinned → latest)"; fi
+else unresolved go "go.dev version"; fi
 
 # Deliberately the feature release (17, 21, 25) and not the exact build:
 # Temurin ships security patches quarterly and pinning past them is a
@@ -106,11 +114,15 @@ if [[ -n "$v" ]]; then
   ok "openjdk -> Java $v (feature release, kept)"
 else
   v="$(curl -fsSL "https://api.adoptium.net/v3/info/available_releases" \
-        | python3 -c 'import sys,json; print(json.load(sys.stdin)["most_recent_lts"])' 2>/dev/null)"
+        | python3 -c 'import sys,json; print(json.load(sys.stdin)["most_recent_lts"])' 2>/dev/null)" || v=
   [[ -n "$v" ]] && ok "openjdk -> Java $v (feature release, current LTS)"
 fi
 if [[ -n "$v" ]]; then printf 'openjdk\tadoptium\t%s\n' "$v" >> "$tmp"
-else warn "openjdk: Adoptium LTS unresolved (left unpinned → current LTS)"; fi
+else unresolved openjdk "Adoptium LTS"; fi
+
+if (( failures )); then
+  die "freeze: $failures lookup(s) failed — no lockfile changes written; retry when the services are reachable"
+fi
 
 mv "$tmp" "$out"
 echo
