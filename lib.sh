@@ -197,10 +197,10 @@ record_install() {
 installed_get() { _tsv_get "$RECORDFILE" "$1" "$2"; }
 
 # --- extraction (no unzip/bzip2/xz needed; Python fills the gaps) ------------
-# _extract <file> <destdir>: extract an archive. Returns 1 if <file> is not a
-# recognised archive (i.e. it's a raw binary).
+# _extract <file> <destdir>: 0 means extracted, 1 means an unrecognised format
+# (a raw binary), and 2 means a recognised archive could not be extracted.
 _extract() {
-  local f="$1" d="$2"; mkdir -p "$d"
+  local f="$1" d="$2"; mkdir -p "$d" || return 2
   case "$f" in
     *.tar.gz|*.tgz)          tar -xzf "$f" -C "$d" ;;
     *.tar.bz2|*.tbz|*.tbz2)  _untar_via_py bz2  "$f" "$d" ;;
@@ -208,19 +208,21 @@ _extract() {
     *.tar)                   tar -xf "$f" -C "$d" ;;
     *.zip)                   _unzip "$f" "$d" ;;
     *) return 1 ;;
-  esac
+  esac || return 2
 }
 
 # Decompress a bzip2/xz tarball with Python, then untar (tools not installed).
 _untar_via_py() {
   local mod="$1" f="$2" d="$3"
-  python3 - "$mod" "$f" > "$TMP/_decomp.tar" <<'PY'
+  # Explicitly propagate failures: _extract runs in an if condition, which
+  # disables errexit here too. Cleanup must not hide a decompressor/tar error.
+  python3 - "$mod" "$f" > "$TMP/_decomp.tar" <<'PY' || return 1
 import importlib, sys
 mod, path = sys.argv[1], sys.argv[2]
 data = importlib.import_module(mod).open(path, 'rb').read()
 sys.stdout.buffer.write(data)
 PY
-  tar -xf "$TMP/_decomp.tar" -C "$d"
+  tar -xf "$TMP/_decomp.tar" -C "$d" || return 1
   rm -f "$TMP/_decomp.tar"
 }
 
@@ -255,7 +257,7 @@ install_binary() {
   local file="$TMP/${url##*/}"
   fetch "$url" "$file"
 
-  local d="$TMP/$name.d" b src
+  local d="$TMP/$name.d" b src extract_status
   if _extract "$file" "$d"; then
     for b in $bins; do
       src="$(_find_bin "$d" "$b")" || die "$name: binary '$b' not found inside ${url##*/}"
@@ -264,6 +266,8 @@ install_binary() {
       ok "$b -> $BIN/$b"
     done
   else
+    extract_status=$?
+    [[ "$extract_status" == 1 ]] || die "$name: failed to extract ${url##*/} — installation aborted"
     # Raw (uncompressed) binary asset.
     install -m 0755 "$file" "$BIN/$first"
     _check_libc "$BIN/$first"
