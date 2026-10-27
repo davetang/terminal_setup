@@ -12,8 +12,10 @@ pipspec="visidata";        [[ -n "$ver" ]] && pipspec="visidata==$ver"
 condaspec="visidata";      [[ -n "$ver" ]] && condaspec="visidata=$ver"
 
 if have pipx; then
-  log "pipx install $pipspec"
-  pipx install "$pipspec"
+  pipx_args=(install)
+  [[ "$FORCE" == 1 ]] && pipx_args+=(--force)
+  log "pipx ${pipx_args[*]} $pipspec"
+  pipx "${pipx_args[@]}" "$pipspec"
 elif have pip3 || have pip; then
   pip="$(command -v pip3 || command -v pip)"
   log "$pip install --user $pipspec"
