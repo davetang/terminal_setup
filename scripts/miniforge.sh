@@ -4,8 +4,9 @@
 set -euo pipefail
 source "$(cd "$(dirname "$0")/.." && pwd)/lib.sh"
 
-if have conda || have mamba; then
-  ok "conda already available: $(command -v conda mamba 2>/dev/null | head -1)"; exit 0
+# The installer helpers require conda; standalone mamba does not satisfy them.
+if have conda; then
+  ok "conda already available: $(command -v conda)"; exit 0
 fi
 if [[ -x "$HOME/miniforge3/bin/conda" ]]; then
   ok "Miniforge already installed at ~/miniforge3"; exit 0

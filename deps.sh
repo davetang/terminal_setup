@@ -38,7 +38,7 @@ case ":$PATH:" in
   *) warn "\$HOME/bin not on PATH — run 'make setup' or add it yourself" ;;
 esac
 
-if have conda || have mamba || [[ -x "$HOME/miniforge3/bin/conda" ]]; then
+if have conda || [[ -x "$HOME/miniforge3/bin/conda" ]]; then
   ok "conda available (for the conda-forge tools, and the libraries screen links)"
 else
   warn "no conda — 'make install' will bootstrap Miniforge for the conda-forge tools"
