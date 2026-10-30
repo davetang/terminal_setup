@@ -97,14 +97,24 @@ mapfile -t early < <(early_exit_flags)
 
 # tar exits the moment it has the member; that SIGPIPEs the decompressor and
 # curl, which is exactly how the download stops early. Their non-zero exits are
-# expected, so run the pipeline unguarded and judge it by the extracted file.
+# expected, so pipefail is off and the pipeline's status is tar's alone. Judge
+# by that, not by the file: a download cut off mid-member leaves a truncated
+# file behind, with tar reporting "Unexpected EOF", and installing it would
+# replace a working ollama with one that can't run.
 set +o pipefail
-curl -fsSL --retry 3 --connect-timeout 20 "$url" 2>/dev/null \
-  | "${ZDEC[@]}" 2>/dev/null \
-  | tar -x -C "$d" ${early[@]+"${early[@]}"} "$MEMBER" 2>/dev/null || true   # empty-safe before bash 4.4
+if curl -fsSL --retry 3 --connect-timeout 20 "$url" 2>/dev/null \
+     | "${ZDEC[@]}" 2>/dev/null \
+     | tar -x -C "$d" ${early[@]+"${early[@]}"} "$MEMBER" 2>"$TMP/tar.err"; then   # empty-safe before bash 4.4
+  extracted=1
+else
+  extracted=
+fi
 set -o pipefail
 
-[[ -s "$d/$MEMBER" ]] || die "ollama: could not extract $MEMBER from ${url##*/} (download interrupted, or the bundle layout changed)"
+if [[ -z "$extracted" || ! -s "$d/$MEMBER" ]]; then
+  sed 's/^/     /' "$TMP/tar.err" >&2
+  die "ollama: could not extract $MEMBER from ${url##*/} (download interrupted, or the bundle layout changed) — nothing was installed"
+fi
 install -m 0755 "$d/$MEMBER" "$BIN/ollama"
 ok "ollama -> $BIN/ollama ($(du -h "$BIN/ollama" | cut -f1), client only — no serve runners)"
 record_install ollama gh "${tag:-$(_release_tag "$url")}"
