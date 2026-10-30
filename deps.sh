@@ -46,10 +46,10 @@ fi
 
 if pipx_broken; then
   warn "$(pipx_fix_hint) — 'make visidata llm' will stop until it's fixed"
-elif have pipx || have pip3 || have pip; then
-  ok "pip/pipx available (for visidata and llm)"
+elif have pipx || uv_bin >/dev/null || have pip3 || have pip; then
+  ok "pipx, uv or pip available (for visidata and llm)"
 else
-  warn "no pip/pipx — visidata and llm will fall back to conda-forge"
+  warn "no pipx, uv or pip — 'make install' adds uv before visidata and llm; on their own they fall back to conda-forge"
 fi
 
 # llm needs Python >= 3.10; older interpreters get it from conda-forge instead.

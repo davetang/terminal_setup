@@ -157,8 +157,8 @@ reports whether you have them.
 | **tree** | the original recursive directory listing | conda-forge |
 | **pigz** (+`unpigz`) | `gzip` across every core | conda-forge |
 | **coreutils** | GNU coreutils, g-prefixed: `gls`, `gsort`, `gdate` … | conda-forge |
-| **visidata** (`vd`) | interactive TUI for tabular data | pipx / pip / conda |
-| **llm** | prompt LLMs from the shell, pipe text into them | pipx / pip / conda |
+| **visidata** (`vd`) | interactive TUI for tabular data | pipx / uv / pip / conda |
+| **llm** | prompt LLMs from the shell, pipe text into them | pipx / uv / pip / conda |
 | **screen** (GNU) | terminal multiplexer; 5.x, for 24-bit colour | source (gcc + make) |
 | **ollama** | CLI for an Ollama server (**client only**) | streamed out of the release bundle — `make ollama` |
 | **go** | the Go toolchain | go.dev tarball — `make sdks` |
@@ -179,10 +179,13 @@ releases, so they are fetched at a pinned commit — see [sendcb](#sendcb),
 [Tools not on GitHub](#tools-not-on-github) for `ncdu`), so they come from
 conda-forge — if no `conda` is found, `make install`
 bootstraps Miniforge under `~/miniforge3` automatically. `visidata` and `llm`
-are pure Python (`pipx` → `pip --user` → conda fallback; a `pipx` that is on
-PATH but no longer runs, typically after a Python upgrade, stops the install
-with the fix rather than falling through, and `make deps` flags it). `screen` is the one
-source build — see [GNU Screen 5, built from source](#gnu-screen-5-built-from-source).
+are pure Python: `pipx` → `uv tool install` → `pip --user` → conda fallback.
+uv comes before pip because PEP 668 makes `pip install --user` refuse on
+Debian 12+ and Ubuntu 23.04+, and `make install` puts uv in place first. A
+`pipx` that is on `PATH` but no longer runs, typically after a Python upgrade,
+stops the install with the fix rather than falling through; `make deps` flags
+it. `screen` is the one source build — see
+[GNU Screen 5, built from source](#gnu-screen-5-built-from-source).
 
 The last five rows are opt-in and deliberately outside `make install` — see
 [ollama, client only](#ollama-client-only),
@@ -252,7 +255,7 @@ llm logs -n 3                     # the last three prompts + responses
 ```
 
 It's pure Python, so it installs the same way visidata does: `pipx` →
-`pip --user` → conda-forge. `llm` needs **Python ≥ 3.10**; on an older
+`uv tool install` → `pip --user` → conda-forge. `llm` needs **Python ≥ 3.10**; on an older
 interpreter `make llm` skips pip and takes it from conda-forge, which brings its
 own Python. `make deps` tells you which way it'll go.
 
@@ -707,7 +710,7 @@ scripts/binary.sh              install one binary tool from binaries.tsv
 scripts/freeze.sh              resolve current versions → versions.lock
 scripts/miniforge.sh           bootstrap Miniforge (no-root)
 scripts/{tmux,zsh,…,tree,pigz,coreutils}.sh   conda-forge installs (one per CONDATOOLS entry)
-scripts/{visidata,llm}.sh      pipx / pip / conda installs
+scripts/{visidata,llm}.sh      pipx / uv / pip / conda installs
 scripts/ollama.sh              stream the ollama CLI out of upstream's bundle
 scripts/sendcb.sh              fetch the sendcb script at its pinned commit
 scripts/notify.sh              fetch notify and its shell hook at their pinned commit
@@ -987,7 +990,7 @@ Pythons in `~/.local/share/uv`, with their commands in `~/.local/bin`. Run
 
 Conda tools (`tree`, `pigz` and `coreutils` among them), `visidata`, `llm`,
 Miniforge, `~/.oh-my-zsh` and your rc edits are left untouched (`pipx uninstall
-llm`, remove `~/miniforge3`, run oh-my-zsh's own `uninstall_oh_my_zsh`, and drop
+llm` or `uv tool uninstall llm`, remove `~/miniforge3`, run oh-my-zsh's own `uninstall_oh_my_zsh`, and drop
 the `# >>> terminal-setup >>>` block by hand if you want).
 
 ## Intentionally omitted

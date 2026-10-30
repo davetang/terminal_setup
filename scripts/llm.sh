@@ -2,7 +2,8 @@
 # llm — Simon Willison's CLI for large language models: one-shot prompts, pipes,
 # chat, templates, and a SQLite log of everything you asked. Talks to hosted
 # APIs (OpenAI out of the box, others via plugins) and to local servers.
-# Pure Python, needs >= 3.10. Prefers pipx, then pip --user, then conda-forge.
+# Pure Python, needs >= 3.10. Prefers pipx, then uv tool, then pip --user, then
+# conda-forge.
 # Honours the pin in versions.lock (channel: pip).
 #
 # Optionally install plugins at the same time (works on an existing install too):
@@ -48,12 +49,17 @@ if need llm; then
     [[ "$FORCE" == 1 ]] && pipx_args+=(--force)
     log "pipx ${pipx_args[*]} $pipspec"
     pipx "${pipx_args[@]}" "$pipspec"
+  elif uv="$(uv_bin)"; then
+    uv_args=(tool install)
+    [[ "$FORCE" == 1 ]] && uv_args+=(--force)
+    log "uv ${uv_args[*]} $pipspec"
+    "$uv" "${uv_args[@]}" "$pipspec"
   elif have pip3 || have pip; then
     pip="$(command -v pip3 || command -v pip)"
     log "$pip install --user $pipspec"
     "$pip" install --user "$pipspec"
   else
-    warn "no pipx/pip — installing llm via conda-forge"
+    warn "no pipx, uv or pip — installing llm via conda-forge"
     conda_llm
   fi
   ok "llm installed ($(_llm_bin || echo 'restart shell / check ~/.local/bin on PATH'))"
@@ -61,8 +67,9 @@ fi
 
 # --- plugins (optional) ------------------------------------------------------
 # 'llm install' is pip inside llm's own environment, so it does the right thing
-# whether llm came from pipx, pip --user or conda. Runs even when llm was
-# already present, so you can add plugins to an existing install.
+# whether llm came from pipx, uv, pip --user or conda (llm depends on pip, so
+# a uv venv has it too). Runs even when llm was already present, so you can add
+# plugins to an existing install.
 if [[ -n "${TS_LLM_PLUGINS:-}" ]]; then
   if llmbin="$(_llm_bin)"; then
     for plugin in $TS_LLM_PLUGINS; do

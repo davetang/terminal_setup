@@ -57,6 +57,16 @@ use_pipx() {
   return 0
 }
 
+# uv_bin: print the uv to use: on PATH, or in $BIN, where 'make uv' (and the
+# binaries step of 'make install') puts it before your shell has ~/bin on PATH.
+# 'uv tool install' gives each tool its own venv the way pipx does, so it works
+# where PEP 668 makes 'pip install --user' refuse (Debian 12+, Ubuntu 23.04+).
+uv_bin() {
+  command -v uv 2>/dev/null && return 0
+  [[ -x "$BIN/uv" ]] && { printf '%s\n' "$BIN/uv"; return 0; }
+  return 1
+}
+
 # --- idempotency -------------------------------------------------------------
 # need <bin>: returns 0 if <bin> should be installed, 1 if it can be skipped.
 # Skips when the binary already exists in $BIN or on PATH, unless FORCE=1.
