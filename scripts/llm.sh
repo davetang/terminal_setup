@@ -43,7 +43,7 @@ if need llm; then
   if ! py_ok; then
     warn "python3 $(python3 -V 2>&1 | awk '{print $2}') is too old for llm (needs >= 3.10) — installing from conda-forge"
     conda_llm
-  elif have pipx; then
+  elif use_pipx; then
     pipx_args=(install)
     [[ "$FORCE" == 1 ]] && pipx_args+=(--force)
     log "pipx ${pipx_args[*]} $pipspec"

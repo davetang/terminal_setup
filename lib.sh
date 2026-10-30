@@ -38,6 +38,25 @@ die()  { printf '%serror%s %s\n' "$_c_red"   "$_c_reset" "$*" >&2; exit 1; }
 have() { command -v "$1" >/dev/null 2>&1; }
 arch() { uname -m; }   # x86_64 on this host
 
+# pipx_broken: pipx is on PATH but can't run. A pip --user install of pipx
+# leaves its launcher in ~/.local/bin when a Python upgrade strands the package
+# in the old site-packages, and every call then dies with "No module named
+# 'pipx'". The tools pipx installed are usually stranded the same way.
+pipx_broken() { have pipx && ! pipx --version >/dev/null 2>&1; }
+pipx_fix_hint() {
+  printf "pipx at %s doesn't run (usually a Python upgrade stranded it) — reinstall it, e.g. 'uv tool install --force pipx', then 'pipx reinstall-all'" \
+    "$(command -v pipx)"
+}
+
+# use_pipx: 0 if pipx runs, 1 if there is none. A broken pipx is fatal rather
+# than a fall-through: a second copy from pip or conda would sit behind the
+# stranded pipx launcher on PATH, and 'ok installed' would point at a dead one.
+use_pipx() {
+  have pipx || return 1
+  pipx_broken && die "$(pipx_fix_hint)"
+  return 0
+}
+
 # --- idempotency -------------------------------------------------------------
 # need <bin>: returns 0 if <bin> should be installed, 1 if it can be skipped.
 # Skips when the binary already exists in $BIN or on PATH, unless FORCE=1.

@@ -44,7 +44,9 @@ else
   warn "no conda — 'make install' will bootstrap Miniforge for the conda-forge tools"
 fi
 
-if have pipx || have pip3 || have pip; then
+if pipx_broken; then
+  warn "$(pipx_fix_hint) — 'make visidata llm' will stop until it's fixed"
+elif have pipx || have pip3 || have pip; then
   ok "pip/pipx available (for visidata and llm)"
 else
   warn "no pip/pipx — visidata and llm will fall back to conda-forge"

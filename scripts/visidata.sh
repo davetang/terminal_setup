@@ -11,7 +11,7 @@ ver="$(lock_get visidata pip)"
 pipspec="visidata";        [[ -n "$ver" ]] && pipspec="visidata==$ver"
 condaspec="visidata";      [[ -n "$ver" ]] && condaspec="visidata=$ver"
 
-if have pipx; then
+if use_pipx; then
   pipx_args=(install)
   [[ "$FORCE" == 1 ]] && pipx_args+=(--force)
   log "pipx ${pipx_args[*]} $pipspec"

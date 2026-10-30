@@ -179,7 +179,9 @@ releases, so they are fetched at a pinned commit — see [sendcb](#sendcb),
 [Tools not on GitHub](#tools-not-on-github) for `ncdu`), so they come from
 conda-forge — if no `conda` is found, `make install`
 bootstraps Miniforge under `~/miniforge3` automatically. `visidata` and `llm`
-are pure Python (`pipx` → `pip --user` → conda fallback). `screen` is the one
+are pure Python (`pipx` → `pip --user` → conda fallback; a `pipx` that is on
+PATH but no longer runs, typically after a Python upgrade, stops the install
+with the fix rather than falling through, and `make deps` flags it). `screen` is the one
 source build — see [GNU Screen 5, built from source](#gnu-screen-5-built-from-source).
 
 The last five rows are opt-in and deliberately outside `make install` — see
