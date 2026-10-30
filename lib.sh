@@ -102,7 +102,9 @@ _forge_api() {
     url="https://api.github.com/repos/$repo/$path"
     [[ -n "${GITHUB_TOKEN:-}" ]] && auth=(-H "Authorization: Bearer $GITHUB_TOKEN")
   fi
-  curl -fsSL "${auth[@]}" "$url" \
+  # ${a[@]+"${a[@]}"}, not "${a[@]}": before bash 4.4, set -u treats an empty
+  # array as unset, so the plain form dies "unbound variable" (RHEL 7's 4.2).
+  curl -fsSL ${auth[@]+"${auth[@]}"} "$url" \
     || die "release API failed for $repo ($path) — rate-limited? for GitHub, export GITHUB_TOKEN"
 }
 

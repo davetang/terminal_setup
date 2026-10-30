@@ -101,7 +101,7 @@ mapfile -t early < <(early_exit_flags)
 set +o pipefail
 curl -fsSL --retry 3 --connect-timeout 20 "$url" 2>/dev/null \
   | "${ZDEC[@]}" 2>/dev/null \
-  | tar -x -C "$d" "${early[@]}" "$MEMBER" 2>/dev/null || true
+  | tar -x -C "$d" ${early[@]+"${early[@]}"} "$MEMBER" 2>/dev/null || true   # empty-safe before bash 4.4
 set -o pipefail
 
 [[ -s "$d/$MEMBER" ]] || die "ollama: could not extract $MEMBER from ${url##*/} (download interrupted, or the bundle layout changed)"
