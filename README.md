@@ -663,6 +663,7 @@ A few other things to know:
 ```sh
 make zsh           # if you don't have one already
 make ohmyzsh
+make setup         # if make ohmyzsh warns that ~/.zshrc has no terminal-setup block
 exec zsh
 ```
 
@@ -694,6 +695,13 @@ The order matters. `shell/init.sh` reads `ZSH_THEME` to decide whether to start
 starship — the two both own the prompt and cannot share it — and sourcing
 `oh-my-zsh.sh` afterwards would reset the prompt no matter what that check
 decided. Set `TS_STARSHIP=1` to force starship anyway, or `0` to never use it.
+
+With no `~/.zshrc` at all, the installer writes one from its own template, which
+sources oh-my-zsh but has no terminal-setup block: `make setup` skips a
+`~/.zshrc` that doesn't exist yet, and usually ran before `make zsh`. Without
+that block zsh doesn't get `~/bin` on `PATH` or the tool hooks, so
+`make ohmyzsh` warns whenever the block is missing. `make setup` then appends
+it, below oh-my-zsh's, which is the order it needs.
 
 `FORCE=1 make ohmyzsh` reinstalls; the old `~/.oh-my-zsh` is **moved aside**
 rather than deleted, because custom themes and plugins live in it.

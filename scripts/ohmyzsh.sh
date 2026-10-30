@@ -60,12 +60,9 @@ if [[ ! -d "$ZSH_DIR" ]]; then
 fi
 
 # --- wire it into ~/.zshrc ----------------------------------------------------
-if [[ ! -f "$zshrc" ]]; then
-  # No ~/.zshrc existed, so install.sh wrote one from its own template and
-  # oh-my-zsh is already sourced there. But that file is new, so the
-  # terminal-setup block is not in it.
-  warn "$zshrc did not exist — install.sh created one from the oh-my-zsh template; re-run 'make setup' to add this repo's block to it"
-elif grep -q 'oh-my-zsh\.sh' "$zshrc"; then
+# Already sourced either because an earlier run wired it, or because there was
+# no ~/.zshrc and install.sh just wrote one from its template.
+if grep -qs 'oh-my-zsh\.sh' "$zshrc"; then
   ok "oh-my-zsh already sourced from $zshrc"
 else
   cat > "$TMP/omz-block" <<'BLOCK'
@@ -79,7 +76,7 @@ source "$ZSH/oh-my-zsh.sh"
 # <<< oh-my-zsh <<<
 BLOCK
 
-  if grep -qF "$ts_begin" "$zshrc"; then
+  if grep -qsF "$ts_begin" "$zshrc"; then
     # Insert above the terminal-setup block so init.sh is sourced last.
     # Built in $TMP and copied over afterwards, never generated straight into
     # $zshrc: a redirect truncates the file before awk writes a byte, so any
@@ -107,6 +104,13 @@ BLOCK
     { printf '\n'; cat "$TMP/omz-block"; } >> "$zshrc"
     ok "added the oh-my-zsh block to $zshrc"
   fi
+fi
+
+# zsh gets ~/bin on PATH and the tool hooks only through the terminal-setup
+# block. 'make setup' skips a ~/.zshrc that doesn't exist yet, and usually ran
+# before 'make zsh', so a ~/.zshrc that install.sh created has none of it.
+if ! grep -qsF "$ts_begin" "$zshrc"; then
+  warn "$zshrc has no terminal-setup block, so zsh won't have $BIN on PATH or the tool hooks — run 'make setup' to add it (below oh-my-zsh, where it belongs)"
 fi
 
 log "oh-my-zsh done — 'exec zsh' to try it; put your own aliases in \${ZSH_CUSTOM:-\$ZSH/custom}/*.zsh"
